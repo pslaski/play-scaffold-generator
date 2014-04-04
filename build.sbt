@@ -5,4 +5,5 @@ version := "1.0"
 scalaVersion := "2.10.3"
 
 sbtPlugin := true
-    
+       
+libraryDependencies += "com.typesafe.slick" %% "slick" % "2.0.1"
