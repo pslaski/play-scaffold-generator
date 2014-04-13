@@ -3,6 +3,9 @@ package org.modelgenerator
 import sbt._
 import Keys._
 import scala.slick.model.codegen.SourceCodeGenerator
+import com.typesafe.config.ConfigFactory
+
+
 
 object ModelGeneratorPlugin extends Plugin {
 
@@ -11,19 +14,28 @@ object ModelGeneratorPlugin extends Plugin {
   lazy val myCommand =
     Command.command("gen-tables") { (state: State) =>
 
-      println(state.configuration.baseDirectory())
-      val sourceGenerator = SourceCodeGenerator.main(
+      val configFile = (state.configuration.baseDirectory() / "/conf/application.conf").getAbsoluteFile
+
+      val config = ConfigFactory.parseFile(configFile)
+
+      val jdbcDriver = config.getString("db.default.driver")
+
+      val url = config.getString("db.default.url")
+
+      val user = config.getString("db.default.user")
+
+      val password = config.getString("db.default.password")
+
+/*     val sourceGenerator = SourceCodeGenerator.main(
         Array("scala.slick.driver.PostgresDriver",
-          "org.postgresql.Driver",
-          "jdbc:postgresql://localhost:5432/shakespeare",
+          jdbcDriver,
+          url,
           (state.configuration.baseDirectory() / "app").getPath,
           "models",
-          "play_user",
-          "12345")
-      )
+          user,
+          password)
+      )*/
 
-      val extracted: Extracted = Project.extract(state)
-      println(extracted.currentRef.project)
       state
     }
   
