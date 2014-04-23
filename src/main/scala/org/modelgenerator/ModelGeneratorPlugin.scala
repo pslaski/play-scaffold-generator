@@ -39,6 +39,8 @@ object ModelGeneratorPlugin extends Plugin {
     CustomizedCodeGenerator.main(Array(slickDriver, jdbcDriver, url, outputDir, modelsPackage, user, password))
     
     DbConnectionGenerator.writeToFile(outputDir, utilsPackage)
+
+    DaoObjectGenerator.generate(Array(slickDriver, jdbcDriver, url, outputDir, modelsPackage, user, password))
     
     val modelFileName = outputDir + "/" + modelsPackage + "/Tables.scala"
     val dbConnectionFileName = outputDir + "/" + utilsPackage + "/DbConnection.scala"
