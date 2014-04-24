@@ -1,19 +1,20 @@
 package org.modelgenerator
-import scala.slick.driver.H2Driver
 
-object CustomizedCodeGenerator{
-  def main(args: Array[String]) = {
+object TablesGenerator{
+  def generate(args: Array[String]) = {
 
-    val slickDriver = args(0)
-    val jdbcDriver = args(1)
-    val url = args(2)
-    val outputFolder = args(3)
-    val pkg = args(4)
-    val user = Option(args(5)) getOrElse("")
-    val password = Option(args(6)) getOrElse("")
+    val jdbcDriver = args(0)
+    val url = args(1)
+    val outputFolder = args(2)
+    val pkg = args(3)
+    val user = Option(args(4)) getOrElse("")
+    val password = Option(args(5)) getOrElse("")
+    
+    val slickDriver = DriverLoader.slickDriver(jdbcDriver)
+    val slickDriverPath = DriverLoader.slickDriverPath(jdbcDriver)
 
-    val db = H2Driver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
-    val model = db.withSession(H2Driver.createModel(_))
+    val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
+    val model = db.withSession(slickDriver.createModel(_))
     val codegen = new scala.slick.model.codegen.SourceCodeGenerator(model){
 
       // Generate auto-join conditions 1
@@ -43,6 +44,6 @@ ${indent(joins.mkString("\n"))}
         }.mkString(" && ")
       })
     }
-    codegen.writeToFile(slickDriver, outputFolder, pkg)
+    codegen.writeToFile(slickDriverPath, outputFolder, pkg)
   }
 }

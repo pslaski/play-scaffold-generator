@@ -1,6 +1,5 @@
 package org.modelgenerator
 
-import scala.slick.driver.H2Driver
 import scala.reflect.runtime._
 import scala.slick.model.Table
 import scala.slick.ast.ColumnOption.PrimaryKey
@@ -8,16 +7,17 @@ import scala.slick.ast.ColumnOption.PrimaryKey
 object DaoObjectGenerator {
   def generate(args: Array[String]) = {
 
-    val slickDriver = args(0)
-    val jdbcDriver = args(1)
-    val url = args(2)
-    val outputFolder = args(3)
-    val pkg = args(4)
-    val user = Option(args(5)) getOrElse("")
-    val password = Option(args(6)) getOrElse("")
+    val jdbcDriver = args(0)
+    val url = args(1)
+    val outputFolder = args(2)
+    val pkg = args(3)
+    val user = Option(args(4)) getOrElse("")
+    val password = Option(args(5)) getOrElse("")
+    
+    val slickDriver = DriverLoader.slickDriver(jdbcDriver)
 
-    val db = H2Driver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
-    val model = db.withSession(H2Driver.createModel(_))
+    val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
+    val model = db.withSession(slickDriver.createModel(_))
 
     model.tables map { table =>
       new DaoObjectGenerator(table).writeToFile(outputFolder, pkg)
