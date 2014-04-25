@@ -58,20 +58,20 @@ ${methods}
   }
 
   def methods : String = {
-      primaryKeyOpt match {
-        case Some(col) => {
-          val (primaryKeyName, primaryKeyType) = (col.name, col.tpe)
-
-          Seq(saveMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
-                  findByIdMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
-                  updateMethodCode(tableRowName, primaryKeyName, queryObjectName),
-                  deleteMethodCode(primaryKeyName, primaryKeyType, queryObjectName),
-                  findAllMethodCode(tableRowName, queryObjectName))
-                  .mkString("\n\n")
-        }
-        case None => Seq(findAllMethodCode(tableRowName, queryObjectName))
-                .mkString("\n\n")
-      }
+	  val (primaryKeyName, primaryKeyType) = primaryKeyOpt match {
+	    case Some(col) => (col.name, col.tpe)
+	    case None => {
+	      val col = table.columns.head
+	      (col.name, col.tpe)
+	    }
+	  }
+	Seq(saveMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
+	          findByIdMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
+	          updateMethodCode(tableRowName, primaryKeyName, queryObjectName),
+	          deleteMethodCode(primaryKeyName, primaryKeyType, queryObjectName),
+	          findAllMethodCode(tableRowName, queryObjectName))
+	          .mkString("\n\n")       
+      
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {
