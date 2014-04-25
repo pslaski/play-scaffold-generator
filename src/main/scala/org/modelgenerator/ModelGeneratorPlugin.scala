@@ -2,10 +2,6 @@ package org.modelgenerator
 
 import sbt._
 import Keys._
-import scala.slick.model.codegen.SourceCodeGenerator
-import com.typesafe.config.ConfigFactory
-
-
 
 object ModelGeneratorPlugin extends Plugin {
 
@@ -17,31 +13,19 @@ object ModelGeneratorPlugin extends Plugin {
   lazy val slickCodeGenTask = baseDirectory in Compile map { baseDir =>
     
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
-
-	val config = ConfigFactory.parseFile(configFile)
-	
-	val jdbcDriver = config.getString("db.default.driver")
-	
-	val url = config.getString("db.default.url")
-	
-	val user = config.getString("db.default.user")
-	
-	val password = config.getString("db.default.password")
     
+    val config = new Config(configFile)
+	
     val outputDir = (baseDir / "app").getPath
-    
-    val modelsPackage = "models"
       
-    val utilsPackage = "utils"
-      
-    TablesGenerator.generate(Array(jdbcDriver, url, outputDir, modelsPackage, user, password))
+    TablesGenerator.generate(config, outputDir)
     
-    DbConnectionGenerator.writeToFile(outputDir, utilsPackage)
+    DbConnectionGenerator.writeToFile(outputDir, config.utilsPackage)
 
-    DaoObjectGenerator.generate(Array(jdbcDriver, url, outputDir, modelsPackage, user, password))
+    DaoObjectGenerator.generate(config, outputDir)
     
-    val modelFileName = outputDir + "/" + modelsPackage + "/Tables.scala"
-    val dbConnectionFileName = outputDir + "/" + utilsPackage + "/DbConnection.scala"
+    val modelFileName = outputDir + "/" + config.modelsPackage + "/Tables.scala"
+    val dbConnectionFileName = outputDir + "/" + config.utilsPackage + "/DbConnection.scala"
     Seq(file(modelFileName), file(dbConnectionFileName))
   }
   

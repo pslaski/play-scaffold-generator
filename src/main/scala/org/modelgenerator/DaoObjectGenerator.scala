@@ -5,14 +5,13 @@ import scala.slick.model.Table
 import scala.slick.ast.ColumnOption.PrimaryKey
 
 object DaoObjectGenerator {
-  def generate(args: Array[String]) = {
+  def generate(config : Config, outputFolder : String) = {
 
-    val jdbcDriver = args(0)
-    val url = args(1)
-    val outputFolder = args(2)
-    val pkg = args(3)
-    val user = Option(args(4)) getOrElse("")
-    val password = Option(args(5)) getOrElse("")
+    val jdbcDriver = config.jdbcDriver
+    val url = config.url
+    val pkg = config.modelsPackage
+    val user = config.user
+    val password = config.password
     
     val slickDriver = DriverLoader.slickDriver(jdbcDriver)
 
