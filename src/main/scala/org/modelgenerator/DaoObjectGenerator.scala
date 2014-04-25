@@ -1,6 +1,5 @@
 package org.modelgenerator
 
-import scala.reflect.runtime._
 import scala.slick.model.Table
 import scala.slick.ast.ColumnOption.PrimaryKey
 
