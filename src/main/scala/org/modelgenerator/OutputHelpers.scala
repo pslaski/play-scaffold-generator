@@ -22,6 +22,22 @@ trait OutputHelpers {
     bw.write(content);
     bw.close();
   }
+
+  def appendStringToFile(content: String, folder: String, fileName: String) = {
+    val path = folder + "/" + fileName
+    val file = new File( path )
+    if (!file.exists()) {
+      file.createNewFile();
+    }
+    val fw = new FileWriter(file.getAbsoluteFile(), true);
+    val bw = new BufferedWriter(fw);
+    bw.write(content);
+    bw.close();
+  }
+
+  def appendToFile(folder:String, fileName: String) {
+      appendStringToFile(indent(code), folder, fileName)
+    }
   
   def writeToFile(folder:String, pkg: String, fileName: String="Tables.scala") {
     writeStringToFile(packageCode(pkg), folder, pkg, fileName)

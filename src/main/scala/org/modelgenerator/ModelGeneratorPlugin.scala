@@ -23,6 +23,8 @@ object ModelGeneratorPlugin extends Plugin {
     DbConnectionGenerator.writeToFile(outputDir, config.utilsPackage)
 
     DaoObjectGenerator.generate(config, outputDir)
+
+    ControllerGenerator.generate(config,outputDir)
     
     val modelFileName = outputDir + "/" + config.modelsPackage + "/Tables.scala"
     val dbConnectionFileName = outputDir + "/" + config.utilsPackage + "/DbConnection.scala"

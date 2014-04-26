@@ -1,7 +1,6 @@
 package org.modelgenerator
 
 import scala.slick.model.Table
-import scala.slick.ast.ColumnOption.PrimaryKey
 
 object DaoObjectGenerator {
   def generate(config : Config, outputFolder : String) = {
@@ -23,13 +22,13 @@ object DaoObjectGenerator {
   }
 }
 
-class DaoObjectGenerator(table : Table) extends OutputHelpers with GeneratorHelpers {
+class DaoObjectGenerator(table : Table) extends OutputHelpers with DaoGeneratorHelpers with GeneratorHelpers {
+
+  override val columns = table.columns
 
   val objectName = table.name.table.toCamelCase + "Dao"
 
   val tableRowName = table.name.table.toCamelCase + "Row"
-
-  val primaryKeyOpt = table.columns.find(_.options.contains(PrimaryKey))
 
   val queryObjectName = table.name.table.toCamelCase
 
@@ -52,24 +51,16 @@ ${methods}
     Seq(importCode("utils.DbConnection._"),
         importCode("Tables._"),
         importCode("Tables.profile.simple._"))
-        .mkString("\n\n")
+        .mkString("\n")
   }
 
   def methods : String = {
-	  val (primaryKeyName, primaryKeyType) = primaryKeyOpt match {
-	    case Some(col) => (col.name, col.tpe)
-	    case None => {
-	      val col = table.columns.head
-	      (col.name, col.tpe)
-	    }
-	  }
-	Seq(saveMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
-	          findByIdMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
-	          updateMethodCode(tableRowName, primaryKeyName, queryObjectName),
-	          deleteMethodCode(primaryKeyName, primaryKeyType, queryObjectName),
-	          findAllMethodCode(tableRowName, queryObjectName))
-	          .mkString("\n\n")       
-      
+    Seq(saveMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
+              findByIdMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
+              updateMethodCode(tableRowName, primaryKeyName, queryObjectName),
+              deleteMethodCode(primaryKeyName, primaryKeyType, queryObjectName),
+              findAllMethodCode(tableRowName, queryObjectName))
+              .mkString("\n\n")
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {

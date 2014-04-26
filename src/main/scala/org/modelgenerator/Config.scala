@@ -17,9 +17,11 @@ class Config(configFile : File) {
 	
 	val password = getStringOrDefault("db.default.password","")
 	
-	val modelsPackage = getStringOrDefault("generator.default.modelDir","models")
+	val modelsPackage = getStringOrDefault("generator.default.modelsDir","models")
+
+  val controllersPackage = getStringOrDefault("generator.default.controllersDir","controllers")
 	  
-	val utilsPackage = getStringOrDefault("generator.default.utilDir","utils")
+	val utilsPackage = getStringOrDefault("generator.default.utilsDir","utils")
 
 	
 	def getStringOrDefault(key : String, default : String) : String = {
