@@ -10,11 +10,11 @@ object ModelGeneratorPlugin extends Plugin {
   
 		  // code generation task
   lazy val slick = TaskKey[Seq[File]]("gen-tables")
-  lazy val slickCodeGenTask = baseDirectory in Compile map { baseDir =>
+  lazy val slickCodeGenTask = (baseDirectory in Compile, name) map { (baseDir, appName) =>
     
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
     
-    val config = new Config(configFile)
+    val config = new Config(configFile, appName)
 	
     val outputDir = (baseDir / "app").getPath
       
@@ -25,6 +25,8 @@ object ModelGeneratorPlugin extends Plugin {
     DaoObjectGenerator.generate(config, outputDir)
 
     ControllerGenerator.generate(config,outputDir)
+
+    ViewGenerator.generate(config, outputDir)
     
     val modelFileName = outputDir + "/" + config.modelsPackage + "/Tables.scala"
     val dbConnectionFileName = outputDir + "/" + config.utilsPackage + "/DbConnection.scala"

@@ -5,9 +5,11 @@ import java.io.File
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigException
 
-class Config(configFile : File) {
+class Config(configFile : File, appName : String) {
 	
 	private val config = ConfigFactory.parseFile(configFile)
+
+  val applicationName = appName
   
 	val jdbcDriver = getStringOrDefault("db.default.driver","org.h2.Driver")
 	
@@ -20,6 +22,8 @@ class Config(configFile : File) {
 	val modelsPackage = getStringOrDefault("generator.default.modelsDir","models")
 
   val controllersPackage = getStringOrDefault("generator.default.controllersDir","controllers")
+
+  val viewsPackage = getStringOrDefault("generator.default.viewsDir","views")
 	  
 	val utilsPackage = getStringOrDefault("generator.default.utilsDir","utils")
 
