@@ -1,4 +1,4 @@
-package org.modelgenerator
+package generators.utils
 
 trait StringUtils {
 

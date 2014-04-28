@@ -1,4 +1,4 @@
-package org.modelgenerator
+package generators.slick.utils
 
 import scala.slick.driver._
 

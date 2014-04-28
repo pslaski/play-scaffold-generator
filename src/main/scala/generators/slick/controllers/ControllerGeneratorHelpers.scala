@@ -1,4 +1,4 @@
-package org.modelgenerator
+package generators.slick.controllers
 
 trait ControllerGeneratorHelpers {
 

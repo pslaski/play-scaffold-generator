@@ -1,4 +1,6 @@
-package org.modelgenerator
+package generators.slick.models
+
+import generators.utils.OutputHelpers
 
 object DbConnectionGenerator extends OutputHelpers {
 

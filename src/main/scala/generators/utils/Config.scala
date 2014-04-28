@@ -1,6 +1,5 @@
-package org.modelgenerator
+package generators.utils
 
-import sbt._
 import java.io.File
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigException

@@ -1,14 +1,14 @@
-package org.modelgenerator
+package generators.slick.views
 
 import scala.slick.model.{Column, Table}
 
-class EditFormViewGenerator(table : Table) extends GeneratorHelpers with ViewHelpers with FormViewGeneratorHelpers {
+class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGeneratorHelpers{
 
   override val columns: Seq[Column] = table.columns
 
   val tableName = table.name.table
 
-  override val title: String = "Edit " + tableName
+  override val title: String = "Add new " + tableName
 
   val tableRowName = tableName.toCamelCase + "Row"
 
@@ -16,11 +16,13 @@ class EditFormViewGenerator(table : Table) extends GeneratorHelpers with ViewHel
 
   val controllerName = tableName.toCamelCase + "Controller"
 
-  override val submitButtonText: String = "Update"
+  override val submitButtonText: String = "Save"
 
-  override val formAction: String = "update"
+  override val formAction: String = "save"
 
   override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]"))
+
+  override val primaryKeyDefaultValue = "0"
 
   override def imports: String = {
     Seq(importCodeView("helper._"),
@@ -29,7 +31,7 @@ class EditFormViewGenerator(table : Table) extends GeneratorHelpers with ViewHel
 
   override def bodyCode: String = {
     s"""
-<h1>Edit ${tableName}</h1>
+<h1>Add new ${tableName}</h1>
   ${form}
 """.trim()
   }

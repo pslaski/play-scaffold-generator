@@ -1,6 +1,9 @@
-package org.modelgenerator
+package generators.slick.controllers
 
-import scala.slick.model._
+import scala.slick.model.Column
+import scala.slick.model.Table
+import generators.slick.utils.{DriverLoader, SlickGeneratorHelpers}
+import generators.utils.{Config, OutputHelpers}
 
 object ControllerGenerator {
   def generate(config : Config, outputFolder : String) = {
@@ -23,7 +26,7 @@ object ControllerGenerator {
     }
 }
 
-class ControllerGenerator(table : Table, modelsPackage : String) extends OutputHelpers with ControllerGeneratorHelpers with GeneratorHelpers {
+class ControllerGenerator(table : Table, modelsPackage : String) extends OutputHelpers with ControllerGeneratorHelpers with SlickGeneratorHelpers {
 
   val tableName = table.name.table.toCamelCase
 

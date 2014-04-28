@@ -1,4 +1,6 @@
-package org.modelgenerator
+package generators.slick.css
+
+import generators.utils.OutputHelpers
 
 object MainCssGenerator extends OutputHelpers{
   override def code: String = {

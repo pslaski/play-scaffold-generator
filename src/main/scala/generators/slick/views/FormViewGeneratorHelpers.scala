@@ -1,8 +1,9 @@
-package org.modelgenerator
+package generators.slick.views
 
 import scala.slick.model.Column
+import generators.slick.utils.SlickGeneratorHelpers
 
-trait FormViewGeneratorHelpers extends GeneratorHelpers{
+trait FormViewGeneratorHelpers extends SlickGeneratorHelpers{
 
   val controllerName : String
 

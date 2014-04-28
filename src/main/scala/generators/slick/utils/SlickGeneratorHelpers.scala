@@ -1,9 +1,10 @@
-package org.modelgenerator
+package generators.slick.utils
 
 import scala.slick.model.Column
 import scala.slick.ast.ColumnOption.PrimaryKey
+import generators.utils.StringUtils
 
-trait GeneratorHelpers extends StringUtils{
+trait SlickGeneratorHelpers extends StringUtils{
 
   def importCode(importPath : String) = "import " + importPath;
 

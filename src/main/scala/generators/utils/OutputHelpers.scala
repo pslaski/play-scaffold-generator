@@ -1,4 +1,4 @@
-package org.modelgenerator
+package generators.utils
 
 import java.io.File
 import java.io.FileWriter

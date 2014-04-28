@@ -1,7 +1,9 @@
-package org.modelgenerator
+package generators.slick.views
 
-import scala.slick.model.{Table, Column}
-import java.io.{BufferedWriter, FileWriter, File}
+import scala.slick.model.Table
+import generators.slick.css.MainCssGenerator
+import generators.slick.utils.DriverLoader
+import generators.utils.Config
 
 object ViewGenerator {
   def generate(config : Config, outputFolder : String) = {

@@ -1,8 +1,9 @@
-package org.modelgenerator
+package generators.slick.views
 
 import scala.slick.model.{Table, Column}
+import generators.slick.utils.SlickGeneratorHelpers
 
-class ListViewGenerator(table : Table) extends GeneratorHelpers with ViewHelpers {
+class ListViewGenerator(table : Table) extends SlickGeneratorHelpers with ViewHelpers {
 
   override val columns: Seq[Column] = table.columns
 

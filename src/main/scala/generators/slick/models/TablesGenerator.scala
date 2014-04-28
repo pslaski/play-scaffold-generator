@@ -1,4 +1,7 @@
-package org.modelgenerator
+package generators.slick.models
+
+import generators.slick.utils.DriverLoader
+import generators.utils.Config
 
 object TablesGenerator{
   def generate(config : Config, outputFolder : String) = {

@@ -1,4 +1,6 @@
-package org.modelgenerator
+package generators.slick.controllers
+
+import generators.utils.OutputHelpers
 
 class RouteGenerator(tableName : String, controllerName : String, primaryKeyType : String) extends OutputHelpers {
 

@@ -1,6 +1,8 @@
-package org.modelgenerator
+package generators.slick.models
 
 import scala.slick.model.Table
+import generators.slick.utils.{DriverLoader, SlickGeneratorHelpers}
+import generators.utils.{Config, OutputHelpers}
 
 object DaoObjectGenerator {
   def generate(config : Config, outputFolder : String) = {
@@ -22,7 +24,7 @@ object DaoObjectGenerator {
   }
 }
 
-class DaoObjectGenerator(table : Table) extends OutputHelpers with DaoGeneratorHelpers with GeneratorHelpers {
+class DaoObjectGenerator(table : Table) extends OutputHelpers with DaoGeneratorHelpers with SlickGeneratorHelpers {
 
   override val columns = table.columns
 

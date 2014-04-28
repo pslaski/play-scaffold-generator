@@ -1,4 +1,6 @@
-package org.modelgenerator
+package generators.slick.views
+
+import generators.utils.{StringUtils, OutputHelpers}
 
 trait ViewHelpers extends OutputHelpers with StringUtils{
 

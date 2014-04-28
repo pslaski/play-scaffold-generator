@@ -1,4 +1,4 @@
-name := "model-generator"
+name := "scaffold-generator"
 
 version := "1.0"
 
