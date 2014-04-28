@@ -6,7 +6,8 @@ object DbConnectionGenerator extends OutputHelpers {
 
   def code : String = {
     s"""
-import play.api.db.slick.Config.driver.simple._
+import models.Tables
+import Tables.profile.simple._
 import play.api.db.DB
 import play.api.Play.current
 

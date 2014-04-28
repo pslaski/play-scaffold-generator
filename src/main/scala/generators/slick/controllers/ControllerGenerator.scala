@@ -69,6 +69,7 @@ object ${objectName} extends Controller {
         importCode("play.api.mvc.Action"),
         importCode("play.api.data._"),
         importCode("play.api.data.Forms._"),
+        importCode("play.api.data.format.Formats._"),
         importCode(modelsPackage + "._"),
         importCode(modelsPackage + ".Tables._"))
         .mkString("\n")
@@ -118,14 +119,14 @@ Form(
       case "BigDecimal" => "bigDecimal"
       case "java.sql.Date" => "sqlDate"
       case "Boolean" => "boolean"
-      case "Byte" => "of[Byte]"
-      case "Short" => "of[Short]"
+      case "Byte" => "of[Byte]"   // need formatter
+      case "Short" => "of[Short]"  // need formatter
       case "Float" => "of[Float]"
       case "Double" => "of[Double]"
-      case "java.sql.Blob" => "of[java.sql.Blob]"
-      case "java.sql.Time" => "of[java.sql.Time]"
-      case "java.sql.Timestamp" => "of[java.sql.Timestamp]"
-      case "java.sql.Clob" => "of[java.sql.Clob]"
+      case "java.sql.Blob" => "of[java.sql.Blob]" // need formatter
+      case "java.sql.Time" => "of[java.sql.Time]" // need formatter
+      case "java.sql.Timestamp" => "of[java.sql.Timestamp]" // need formatter
+      case "java.sql.Clob" => "of[java.sql.Clob]" // need formatter
       case _ => "text"
     }
   }

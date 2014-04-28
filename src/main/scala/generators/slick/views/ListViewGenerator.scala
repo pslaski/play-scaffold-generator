@@ -23,6 +23,7 @@ class ListViewGenerator(table : Table) extends SlickGeneratorHelpers with ViewHe
 
   override def bodyCode: String = {
     s"""
+<h2>${listName.toUpperCase}</h2>
 <p><a href="@routes.${controllerName}.create" class="btn btn-primary">Add new ${tableName}</a></p>
 
 <ul class="list-group">
