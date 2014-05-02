@@ -1,19 +1,23 @@
 package generators.slick.views
 
 import scala.slick.model.{Column, Table}
-import generators.slick.utils.SlickGeneratorHelpers
+import generators.slick.utils.TableInfo
 
-class ShowViewGenerator(table : Table) extends SlickGeneratorHelpers with ViewHelpers {
+class ShowViewGenerator(table : Table) extends ViewHelpers {
 
-  override val columns: Seq[Column] = table.columns
+  val tableInfo = new TableInfo(table)
 
-  val tableName = table.name.table
+  val columns: Seq[Column] = tableInfo.columns
+
+  val tableName = tableInfo.name
 
   override val title: String = "Show " + tableName
 
-  val tableRowName = tableName.toCamelCase + "Row"
+  val tableRowName = tableInfo.tableRowName
 
-  val controllerName = tableName.toCamelCase + "Controller"
+  val controllerName = tableInfo.controllerName
+
+  val primaryKeyName = tableInfo.primaryKeyName
 
   override val arguments = Seq((tableName, "Tables." + tableRowName))
 

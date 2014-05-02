@@ -1,9 +1,10 @@
 package generators.slick.views
 
 import scala.slick.model.Column
-import generators.slick.utils.SlickGeneratorHelpers
 
-trait FormViewGeneratorHelpers extends SlickGeneratorHelpers{
+trait FormViewGeneratorHelpers{
+
+  val columns : Seq[Column]
 
   val controllerName : String
 
@@ -12,6 +13,8 @@ trait FormViewGeneratorHelpers extends SlickGeneratorHelpers{
   val submitButtonText : String
 
   val formAction : String
+
+  val primaryKeyName : String
 
   val primaryKeyDefaultValue : String = "@value"
 

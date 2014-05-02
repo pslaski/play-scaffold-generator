@@ -1,22 +1,17 @@
 package generators.slick.models
 
-import generators.slick.utils.DriverLoader
-import generators.utils.Config
+import generators.utils.{ModelProvider, Config}
 
 object TablesGenerator{
   def generate(config : Config, outputFolder : String) = {
 
-    val jdbcDriver = config.jdbcDriver
-    val url = config.url
     val pkg = config.modelsPackage
-    val user = config.user
-    val password = config.password
-    
-    val slickDriver = DriverLoader.slickDriver(jdbcDriver)
-    val slickDriverPath = DriverLoader.slickDriverPath(jdbcDriver)
 
-    val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
-    val model = db.withSession(slickDriver.createModel(_))
+    val modelProvider = new ModelProvider(config)
+
+    val slickDriverPath = modelProvider.slickDriverPath
+
+    val model = modelProvider.model
     val codegen = new scala.slick.model.codegen.SourceCodeGenerator(model){
 
       // Generate auto-join conditions 1

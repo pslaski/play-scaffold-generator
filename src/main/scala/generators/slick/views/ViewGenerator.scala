@@ -3,21 +3,14 @@ package generators.slick.views
 import scala.slick.model.Table
 import generators.slick.css.MainCssGenerator
 import generators.slick.utils.DriverLoader
-import generators.utils.Config
+import generators.utils.{ModelProvider, Config}
 
 object ViewGenerator {
   def generate(config : Config, outputFolder : String) = {
 
-    val jdbcDriver = config.jdbcDriver
-    val url = config.url
     val pkg = config.viewsPackage
-    val user = config.user
-    val password = config.password
 
-    val slickDriver = DriverLoader.slickDriver(jdbcDriver)
-
-    val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
-    val model = db.withSession(slickDriver.createModel(_))
+    val model = new ModelProvider(config).model
 
     new MainLayoutViewGenerator(model, config.applicationName).writeToFile(outputFolder, pkg)
 

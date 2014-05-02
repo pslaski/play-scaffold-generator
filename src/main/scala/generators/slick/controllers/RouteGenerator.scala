@@ -1,8 +1,12 @@
 package generators.slick.controllers
 
 import generators.utils.OutputHelpers
+import scala.slick.model.Table
+import generators.slick.utils.TableInfo
 
-class RouteGenerator(tableName : String, controllerName : String, primaryKeyType : String) extends OutputHelpers {
+class RouteGenerator(table : Table) extends OutputHelpers {
+
+  val tableInfo = new TableInfo(table)
 
   override def code: String = {
     Seq(comment,
@@ -18,12 +22,16 @@ class RouteGenerator(tableName : String, controllerName : String, primaryKeyType
 
   override def indent(code: String): String = "\n" + code + "\n"
 
-  val tableUrl = tableName.toLowerCase + "s"
+  val tableUrl = tableInfo.name + "s"
+
+  val controllerName = tableInfo.controllerName
+
+  val primaryKeyType = tableInfo.primaryKeyType
 
   val separator = "\t\t"
 
   def comment = {
-    s"# ${tableName} routes"
+    s"# ${tableInfo.nameCamelCased} routes"
   }
 
   def indexRoute = {

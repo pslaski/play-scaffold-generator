@@ -2,7 +2,7 @@ package generators.slick.controllers
 
 import scala.slick.model.Column
 import scala.slick.model.Table
-import generators.slick.utils.{DriverLoader, SlickGeneratorHelpers}
+import generators.slick.utils.{TableInfo, DriverLoader, SlickGeneratorHelpers}
 import generators.utils.{Config, OutputHelpers}
 
 object ControllerGenerator {
@@ -28,19 +28,22 @@ object ControllerGenerator {
 
 class ControllerGenerator(table : Table, modelsPackage : String) extends OutputHelpers with ControllerGeneratorHelpers with SlickGeneratorHelpers {
 
-  val tableName = table.name.table.toCamelCase
+  val tableInfo = new TableInfo(table)
 
-  override val columns = table.columns
+  val columns = tableInfo.columns
 
-  val tableRowName = tableName + "Row"
+  val tableRowName = tableInfo.tableRowName
 
-  override val formName = tableName + "Form"
+  override val formName = tableInfo.formName
 
-  override val controllerName = tableName + "Controller"
+  override val controllerName = tableInfo.controllerName
 
-  override val daoObjectName = table.name.table.toCamelCase + "Dao"
+  override val daoObjectName = tableInfo.daoObjectName
 
-  override val viewsPackage = table.name.table.toLowerCase
+  override val viewsPackage = tableInfo.viewsPackage
+
+  override val primaryKeyName: String = tableInfo.primaryKeyName
+  override val primaryKeyType: String = tableInfo.primaryKeyType
 
   override def code: String = {
     s"""
@@ -132,9 +135,8 @@ Form(
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= controllerName +  ".scala") {
-      val routeGenerator = new RouteGenerator(tableName, controllerName, primaryKeyType)
+      val routeGenerator = new RouteGenerator(table)
       routeGenerator.appendToFile("conf", "routes")
       writeStringToFile(packageCode(pkg), folder, pkg, fileName)
     }
-
 }

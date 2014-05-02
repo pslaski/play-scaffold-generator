@@ -1,54 +1,62 @@
 package generators.slick.models
 
 trait DaoGeneratorHelpers {
+
+  val rowName : String
+
+  val tableRowName : String
+
+  val primaryKeyName : String
+
+  val primaryKeyType : String
+
+  val queryObjectName : String
   
-  def saveMethodCode(rowClass : String, primaryKey : String, primaryKeyTpe : String, queryObject : String) = {
-    
-    val row = rowClass.toLowerCase().dropRight(3)
+  def saveMethodCode = {
     
     s"""
-def save(${row}: ${rowClass}) : ${primaryKeyTpe} = {
-  ${queryObject} returning ${queryObject}.map(_.${primaryKey}) insert(${row})
+def save(${rowName}: ${tableRowName}) : ${primaryKeyType} = {
+  ${queryObjectName} returning ${queryObjectName}.map(_.${primaryKeyName}) insert(${rowName})
 }""".trim()
   }
   
-  def findAllMethodCode(rowClass : String, queryObject : String) = {
+  def findAllMethodCode = {
     s"""
-def findAll : List[${rowClass}] = {
-  ${queryObject}.list
+def findAll : List[${tableRowName}] = {
+  ${queryObjectName}.list
 }""".trim()
   }
   
-  def findByIdMethodCode(rowClass : String, primaryKey : String, primaryKeyTpe : String, queryObject : String) = {
+  def findByIdMethodCode = {
     s"""
-def findById(${primaryKey}: ${primaryKeyTpe}) : Option[${rowClass}] = {
-  val queryFindById = ${findByCode(queryObject, primaryKey)}
+def findById(${primaryKeyName}: ${primaryKeyType}) : Option[${tableRowName}] = {
+  val queryFindById = ${findByCode(primaryKeyName)}
 
   queryFindById.firstOption
 }""".trim()
   }
   
-  def deleteMethodCode(primaryKey : String, primaryKeyTpe : String, queryObject : String) = {
+  def deleteMethodCode = {
     s"""
-def delete(${primaryKey}: ${primaryKeyTpe}) = {
-  val queryFindById = ${findByCode(queryObject, primaryKey)}
+def delete(${primaryKeyName}: ${primaryKeyType}) = {
+  val queryFindById = ${findByCode(primaryKeyName)}
 
   queryFindById.delete
 }""".trim()
   }
   
-  def findByCode(queryObject : String, fieldName : String) = {
+  def findByCode(fieldName : String) = {
     s"""
 for {
-    row <- ${queryObject} if row.${fieldName} === ${fieldName}
+    row <- ${queryObjectName} if row.${fieldName} === ${fieldName}
   } yield row""".trim()
   }
   
-    def updateMethodCode(rowClass : String, primaryKey : String, queryObject : String) = {
+    def updateMethodCode = {
     s"""
-def update(updatedRow: ${rowClass}) = {
+def update(updatedRow: ${tableRowName}) = {
   val queryFindById = for {
-    row <- ${queryObject} if row.${primaryKey} === updatedRow.${primaryKey}
+    row <- ${queryObjectName} if row.${primaryKeyName} === updatedRow.${primaryKeyName}
   } yield row
 
   queryFindById.update(updatedRow)

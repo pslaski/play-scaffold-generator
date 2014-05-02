@@ -1,22 +1,15 @@
 package generators.slick.models
 
 import scala.slick.model.Table
-import generators.slick.utils.{DriverLoader, SlickGeneratorHelpers}
-import generators.utils.{Config, OutputHelpers}
+import generators.slick.utils.{TableInfo, SlickGeneratorHelpers}
+import generators.utils.{ModelProvider, Config, OutputHelpers}
 
 object DaoObjectGenerator {
   def generate(config : Config, outputFolder : String) = {
 
-    val jdbcDriver = config.jdbcDriver
-    val url = config.url
     val pkg = config.modelsPackage
-    val user = config.user
-    val password = config.password
-    
-    val slickDriver = DriverLoader.slickDriver(jdbcDriver)
 
-    val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
-    val model = db.withSession(slickDriver.createModel(_))
+    val model = new ModelProvider(config).model
 
     model.tables map { table =>
       new DaoObjectGenerator(table).writeToFile(outputFolder, pkg)
@@ -26,19 +19,23 @@ object DaoObjectGenerator {
 
 class DaoObjectGenerator(table : Table) extends OutputHelpers with DaoGeneratorHelpers with SlickGeneratorHelpers {
 
-  override val columns = table.columns
+  val tableInfo = new TableInfo(table)
 
-  val objectName = table.name.table.toCamelCase + "Dao"
+  override val rowName: String = tableInfo.name.toLowerCase
 
-  val tableRowName = table.name.table.toCamelCase + "Row"
+  override val primaryKeyName: String = tableInfo.primaryKeyName
+  override val primaryKeyType: String = tableInfo.primaryKeyType
 
-  val queryObjectName = table.name.table.toCamelCase
+  override val tableRowName: String = tableInfo.tableRowName
+  override val queryObjectName: String = tableInfo.queryObjectName
 
-  override def code: String = objectCode(objectName)
+  val objectName = tableInfo.daoObjectName
+
+  override def code: String = objectCode
 
   override def indent(code: String): String = code
 
-  def objectCode(objectName : String) : String = {
+  def objectCode : String = {
     s"""
 object ${objectName} {
 
@@ -57,15 +54,16 @@ ${methods}
   }
 
   def methods : String = {
-    Seq(saveMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
-              findByIdMethodCode(tableRowName, primaryKeyName, primaryKeyType, queryObjectName),
-              updateMethodCode(tableRowName, primaryKeyName, queryObjectName),
-              deleteMethodCode(primaryKeyName, primaryKeyType, queryObjectName),
-              findAllMethodCode(tableRowName, queryObjectName))
-              .mkString("\n\n")
+    Seq(saveMethodCode,
+        findByIdMethodCode,
+        updateMethodCode,
+        deleteMethodCode,
+        findAllMethodCode)
+        .mkString("\n\n")
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {
       writeStringToFile(packageCode(pkg), folder, pkg, fileName)
     }
+
 }

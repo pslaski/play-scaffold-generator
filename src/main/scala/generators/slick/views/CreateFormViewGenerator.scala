@@ -1,26 +1,31 @@
 package generators.slick.views
 
 import scala.slick.model.{Column, Table}
+import generators.slick.utils.TableInfo
 
 class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGeneratorHelpers{
 
-  override val columns: Seq[Column] = table.columns
+  val tableInfo = new TableInfo(table)
 
-  val tableName = table.name.table
+  override val columns: Seq[Column] = tableInfo.columns
+
+  val tableName = tableInfo.name
 
   override val title: String = "Add new " + tableName
 
-  val tableRowName = tableName.toCamelCase + "Row"
+  val tableRowName = tableInfo.tableRowName
 
-  val formName = tableName + "Form"
+  val formName = tableInfo.formName
 
-  val controllerName = tableName.toCamelCase + "Controller"
+  val controllerName = tableInfo.controllerName
 
   override val submitButtonText: String = "Save"
 
   override val formAction: String = "save"
 
   override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]"))
+
+  override val primaryKeyName: String = tableInfo.primaryKeyName
 
   override val primaryKeyDefaultValue = "0"
 
