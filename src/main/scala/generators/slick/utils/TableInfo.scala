@@ -12,6 +12,8 @@ class TableInfo(table : Table) extends StringUtils{
 
   val nameCamelCased : String = name.toCamelCase
 
+  val nameCamelCasedUncapitalized : String = nameCamelCased.uncapitalize
+
   val daoObjectName : String = nameCamelCased + "Dao"
 
   val tableRowName : String = nameCamelCased + "Row"
@@ -28,7 +30,7 @@ class TableInfo(table : Table) extends StringUtils{
         }
       }
 
-  val formName = nameCamelCased + "Form"
+  val formName = nameCamelCasedUncapitalized + "Form"
 
   val controllerName = nameCamelCased + "Controller"
 

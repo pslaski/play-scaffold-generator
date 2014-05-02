@@ -1,8 +1,12 @@
 package generators.slick.models
 
-trait DaoGeneratorHelpers {
+import generators.utils.StringUtils
+
+trait DaoGeneratorHelpers extends StringUtils{
 
   val rowName : String
+
+  val rowNameCamelCased : String
 
   val tableRowName : String
 
@@ -11,6 +15,8 @@ trait DaoGeneratorHelpers {
   val primaryKeyType : String
 
   val queryObjectName : String
+
+  val fieldsForSimpleName : Seq[String]
   
   def saveMethodCode = {
     
@@ -36,9 +42,10 @@ def findById(${primaryKeyName}: ${primaryKeyType}) : Option[${tableRowName}] = {
 }""".trim()
   }
   
-  def deleteMethodCode = {
+  def deleteMethodCode(childData : Seq[(String,String)]) = {
     s"""
 def delete(${primaryKeyName}: ${primaryKeyType}) = {
+  ${childData.map(child => deleteChilds(child._1, child._2)).mkString("\n")}
   val queryFindById = ${findByCode(primaryKeyName)}
 
   queryFindById.delete
@@ -52,7 +59,7 @@ for {
   } yield row""".trim()
   }
   
-    def updateMethodCode = {
+  def updateMethodCode = {
     s"""
 def update(updatedRow: ${tableRowName}) = {
   val queryFindById = for {
@@ -61,6 +68,35 @@ def update(updatedRow: ${tableRowName}) = {
 
   queryFindById.update(updatedRow)
 }""".trim()
+  }
+
+  def findByForeignKeyMethodCode(foreignKeyName : String, referencedTable : String) = {
+  s"""
+def ${rowNameCamelCased.uncapitalize+"s"}For${referencedTable}(${foreignKeyName}: Long) : List[${tableRowName}] = {
+  ${queryObjectName}.filter(_.${foreignKeyName} === ${foreignKeyName}).list
+}""".trim()
+}
+
+  def formOptionsMethodCode = {
+    s"""
+def formOptions : Seq[(String, String)] = {
+  ${queryObjectName}.list.map{ row =>
+    (row.${primaryKeyName}.toString, ${fieldsForSimpleName.map("row." + _).mkString(" + \" \" + ")})
+  }
+}""".trim()
+  }
+
+  def deleteByForeignKeyMethodCode(foreignKeyName : String, referencedTable : String) = {
+    s"""
+def delete${rowNameCamelCased+"s"}For${referencedTable}(${foreignKeyName} : Long) = {
+  ${rowNameCamelCased.uncapitalize+"s"}For${referencedTable}(${foreignKeyName}) map {  row =>
+    delete(row.${primaryKeyName})
+  }
+}""".trim()
+  }
+
+  def deleteChilds(childDao : String, childName : String) = {
+    s"${childDao}.delete${childName + "s"}For${queryObjectName}(${primaryKeyName})"
   }
   
 }

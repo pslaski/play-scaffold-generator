@@ -8,5 +8,7 @@ trait StringUtils {
       .split("_")
       .map(_.capitalize)
       .mkString("")
+
+    final def uncapitalize: String = str(0).toString.toLowerCase + str.tail
   }
 }
