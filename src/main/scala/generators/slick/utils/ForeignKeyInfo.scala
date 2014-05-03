@@ -1,6 +1,6 @@
-package generators.slick.models
+package generators.slick.utils
 
-import scala.slick.model.{QualifiedName, ForeignKey, Table, Model}
+import scala.slick.model.{QualifiedName, ForeignKey, Model}
 
 class ForeignKeyInfo(model : Model) {
 

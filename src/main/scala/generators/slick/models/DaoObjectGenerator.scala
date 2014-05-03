@@ -1,7 +1,7 @@
 package generators.slick.models
 
 import scala.slick.model.{ForeignKeyAction, Table}
-import generators.slick.utils.{TableInfo, SlickGeneratorHelpers}
+import generators.slick.utils.{ForeignKeyInfo, TableInfo, SlickGeneratorHelpers}
 import generators.utils.{ModelProvider, Config, OutputHelpers}
 
 object DaoObjectGenerator {

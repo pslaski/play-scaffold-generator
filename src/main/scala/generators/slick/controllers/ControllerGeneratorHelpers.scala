@@ -1,6 +1,10 @@
 package generators.slick.controllers
 
-trait ControllerGeneratorHelpers {
+import generators.utils.StringUtils
+
+trait ControllerGeneratorHelpers extends StringUtils{
+
+  val tableName : String
 
   val controllerName : String
 
@@ -13,6 +17,10 @@ trait ControllerGeneratorHelpers {
   val primaryKeyName : String
 
   val primaryKeyType : String
+
+  val parentDaoObjects : Seq[String]
+
+  val childsData : Seq[(String, String, String)]
 
   def indexMethod = {
     s"""
@@ -31,7 +39,7 @@ def list = Action {
   def createMethod = {
     s"""
 def create = Action {
-  Ok(views.html.${viewsPackage}.createForm(${formName}))
+  Ok(views.html.${viewsPackage}.createForm(${formName}${formOptions}))
 }""".trim()
   }
 
@@ -40,7 +48,7 @@ def create = Action {
 def save = Action { implicit request =>
   ${formName}.bindFromRequest.fold(
       formWithErrors => {
-      BadRequest(views.html.${viewsPackage}.createForm(formWithErrors))
+      BadRequest(views.html.${viewsPackage}.createForm(formWithErrors${formOptions}))
     },
     formData => {
       val id = ${daoObjectName}.save(formData)
@@ -57,17 +65,29 @@ def show(${primaryKeyName} : ${primaryKeyType}) = Action {
     BadRequest("Not existed")
   ){
     obj => {
-      Ok(views.html.${viewsPackage}.show(obj))
+      ${childsFinders}
+      Ok(views.html.${viewsPackage}.show(obj${showViewOptions}))
     }
   }
 }""".trim()
+  }
+
+  def childsFinders = {
+    childsData.map{ child =>
+      childFinder(child._1, child._2, child._3)
+    }.mkString("\n")
+  }
+
+  private def childFinder(child : String, childDao : String, foreignKeyName : String) = {
+    val childName = child.toCamelCase.uncapitalize + "s"
+    s"val ${childName} = ${childDao}.${childName}For${tableName.toCamelCase}(obj.${foreignKeyName})"
   }
 
   def editMethod = {
     s"""
 def edit(${primaryKeyName} : ${primaryKeyType}) = Action {
   ${daoObjectName}.findById(${primaryKeyName}).map { obj =>
-      Ok(views.html.${viewsPackage}.editForm(${formName}.fill(obj)))
+      Ok(views.html.${viewsPackage}.editForm(${formName}.fill(obj)${formOptions}))
   }.getOrElse(NotFound)
 }""".trim()
   }
@@ -77,7 +97,7 @@ def edit(${primaryKeyName} : ${primaryKeyType}) = Action {
 def update = Action { implicit request =>
   ${formName}.bindFromRequest.fold(
       formWithErrors => {
-      BadRequest(views.html.${viewsPackage}.editForm(formWithErrors))
+      BadRequest(views.html.${viewsPackage}.editForm(formWithErrors${formOptions}))
     },
     formData => {
       ${daoObjectName}.update(formData)
@@ -95,4 +115,19 @@ def delete(${primaryKeyName} : ${primaryKeyType}) = Action {
 }""".trim()
   }
 
+  private def showViewOptions = {
+    if(childsData.isEmpty){
+      ""
+    } else {
+      ", " + childsData.map(_._1.toCamelCase.uncapitalize + "s").mkString(", ")
+    }
+  }
+
+  private def formOptions = {
+    if(parentDaoObjects.isEmpty){
+      ""
+    } else {
+      ", " + parentDaoObjects.map(_ + ".formOptions").mkString(", ")
+    }
+  }
 }

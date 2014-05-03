@@ -2,33 +2,31 @@ package generators.slick.controllers
 
 import scala.slick.model.Column
 import scala.slick.model.Table
-import generators.slick.utils.{TableInfo, DriverLoader, SlickGeneratorHelpers}
-import generators.utils.{Config, OutputHelpers}
+import generators.slick.utils.{ForeignKeyInfo, TableInfo, DriverLoader, SlickGeneratorHelpers}
+import generators.utils.{ModelProvider, Config, OutputHelpers}
 
 object ControllerGenerator {
   def generate(config : Config, outputFolder : String) = {
 
-      val jdbcDriver = config.jdbcDriver
-      val url = config.url
-      val modelsPackage = config.modelsPackage
-      val controllersPackage = config.controllersPackage
-      val user = config.user
-      val password = config.password
+    val modelsPackage = config.modelsPackage
+    val controllersPackage = config.controllersPackage
 
-      val slickDriver = DriverLoader.slickDriver(jdbcDriver)
 
-      val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
-      val model = db.withSession(slickDriver.createModel(_))
+    val model = new ModelProvider(config).model
 
-      model.tables map { table =>
-        new ControllerGenerator(table, modelsPackage).writeToFile(outputFolder, controllersPackage)
-      }
+    val foreignKeyInfo = new ForeignKeyInfo(model)
+
+    model.tables map { table =>
+      new ControllerGenerator(table, modelsPackage, foreignKeyInfo).writeToFile(outputFolder, controllersPackage)
     }
+  }
 }
 
-class ControllerGenerator(table : Table, modelsPackage : String) extends OutputHelpers with ControllerGeneratorHelpers with SlickGeneratorHelpers {
+class ControllerGenerator(table : Table, modelsPackage : String, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with ControllerGeneratorHelpers with SlickGeneratorHelpers {
 
   val tableInfo = new TableInfo(table)
+
+  override val tableName: String = tableInfo.name
 
   val columns = tableInfo.columns
 
@@ -44,6 +42,16 @@ class ControllerGenerator(table : Table, modelsPackage : String) extends OutputH
 
   override val primaryKeyName: String = tableInfo.primaryKeyName
   override val primaryKeyType: String = tableInfo.primaryKeyType
+
+  override val parentDaoObjects: Seq[String] = table.foreignKeys.map { fk =>
+    new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable)).daoObjectName
+  }
+  override val childsData: Seq[(String, String, String)] = {
+    foreignKeyInfo.foreignKeysReferencedTable(table.name).map { fk =>
+      val tabInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
+      (tabInfo.name, tabInfo.daoObjectName, primaryKeyName)
+    }
+  }
 
   override def code: String = {
     s"""
@@ -139,4 +147,5 @@ Form(
       routeGenerator.appendToFile("conf", "routes")
       writeStringToFile(packageCode(pkg), folder, pkg, fileName)
     }
+
 }
