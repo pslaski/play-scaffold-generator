@@ -21,7 +21,13 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
 
   val primaryKeyName = tableInfo.primaryKeyName
 
-  override val arguments = Seq((tableName, "Tables." + tableRowName))
+  val childsTables : Seq[TableInfo] = foreignKeyInfo.foreignKeysReferencedTables(table.name).map{ fk =>
+    new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
+  }
+
+  val childsViewArgs : Seq[(String, String)] = childsTables.map(table => (table.listName, s"List[Tables.${table.tableRowName}]"))
+
+  override val arguments = Seq((tableName, "Tables." + tableRowName)) ++ childsViewArgs
 
   override def imports: String = ""
 
@@ -29,6 +35,8 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
     s"""
 <h2>${tableName}</h2>
 ${fields}
+
+${childs}
 
 ${buttons}
 """.trim()
@@ -89,14 +97,32 @@ ${buttons}
 </div>
 """.trim()
   }
-}
 
+  def childs = {
+    childsTables.map {
+      printChild(_)
+    }.mkString("\n")
+  }
+
+  def printChild(tableInfo : TableInfo) = {
+    s"""
+<h3>${tableInfo.listName.toUpperCase}</h3>
 <ul class="list-group">
-    @for(chapter <- chapters) {
+    @for(${tableInfo.name} <- ${tableInfo.listName}) {
         <li class="list-group-item">
 
-            <a href="@routes.ChapterController.show(chapter.chapterid)" class="btn btn-default">@chapter.chapterid</a>
+            <a href="@routes.${tableInfo.controllerName}.show(${tableInfo.name}.${tableInfo.primaryKeyName})" class="btn btn-default">${childRow(tableInfo.name, tableInfo.columns)}</a>
 
         </li>
     }
 </ul>
+""".trim()
+  }
+
+  def childRow(rowName : String, columns : Seq[Column]) = {
+    columns.take(5).map{ col =>
+      s"@${rowName}.${col.name}"
+    }.mkString(" ")
+  }
+
+}
