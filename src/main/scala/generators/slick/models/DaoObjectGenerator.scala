@@ -67,7 +67,7 @@ ${methods}
 
     val cascadeChildData = foreignKeyInfo.foreignKeysReferencedTable(table.name).map{ fk =>
       fk.onDelete match {
-        case ForeignKeyAction.Cascade => {
+        case ForeignKeyAction.Restrict => {
           val tab = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
           (tab.daoObjectName, tab.nameCamelCased)
         }
