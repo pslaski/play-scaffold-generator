@@ -35,7 +35,10 @@ class DaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends
 
   val objectName = tableInfo.daoObjectName
 
-  override val fieldsForSimpleName = tableInfo.columns.take(5).map(_.name)
+  override val fieldsForSimpleName = tableInfo.columns.take(5).map{ col =>
+    if(col.nullable) col.name + ".getOrElse(\"\")"
+    else col.name
+  }
 
   override def code: String = objectCode
 
