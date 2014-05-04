@@ -23,7 +23,13 @@ class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGe
 
   override val formAction: String = "save"
 
-  override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]"))
+  override val foreignKeys: Seq[(String, String)] = tableInfo.foreignKeys.map { fk =>
+    (fk.referencingColumns.head.name, fk.referencedTable.table.toCamelCase.uncapitalize)
+  }
+
+  val selectFormOptionsArgs : Seq[(String, String)] = foreignKeys.map( fk => ( fk._2 + "Options", "Seq[(String, String)]"))
+
+  override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]")) ++ selectFormOptionsArgs
 
   override val primaryKeyName: String = tableInfo.primaryKeyName
 
@@ -40,4 +46,5 @@ class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGe
   ${form}
 """.trim()
   }
+
 }

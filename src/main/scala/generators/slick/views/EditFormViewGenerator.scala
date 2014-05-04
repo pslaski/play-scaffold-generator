@@ -25,7 +25,13 @@ class EditFormViewGenerator(table : Table) extends ViewHelpers with FormViewGene
 
   override val formAction: String = "update"
 
-  override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]"))
+  override val foreignKeys: Seq[(String, String)] = tableInfo.foreignKeys.map { fk =>
+    (fk.referencingColumns.head.name, fk.referencedTable.table.toCamelCase.uncapitalize)
+  }
+
+  val selectFormOptionsArgs : Seq[(String, String)] = foreignKeys.map( fk => ( fk._2 + "Options", "Seq[(String, String)]"))
+
+  override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]")) ++ selectFormOptionsArgs
 
   override def imports: String = {
     Seq(importCodeView("helper._"),

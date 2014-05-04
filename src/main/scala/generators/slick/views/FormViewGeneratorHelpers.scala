@@ -18,6 +18,8 @@ trait FormViewGeneratorHelpers{
 
   val primaryKeyDefaultValue : String = "@value"
 
+  val foreignKeys : Seq[(String, String)]
+
   def form = {
     s"""
   @form(routes.${controllerName}.${formAction}) {
@@ -40,6 +42,9 @@ ${actions}
   def formField(column : Column) = {
     if(column.name.equals(primaryKeyName)){
       inputPrimaryKeyCode(column.name)
+    }
+    else if(foreignKeys.exists(_._1.equals(column.name))){
+      selectCode(column.name, foreignKeys.find(_._1.equals(column.name)).get._2)
     }
     else {
       convertTypeToInput(column)
@@ -80,6 +85,10 @@ ${actions}
 
   def checkboxCode(fieldName : String) = {
     s"""@checkbox(${formName}("${fieldName}"), '_label -> "${fieldName}")"""
+  }
+
+  def selectCode(fieldName : String, optionsName : String) = {
+    s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}")"""
   }
 
   def actions = {

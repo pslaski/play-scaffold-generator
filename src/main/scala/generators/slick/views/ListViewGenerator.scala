@@ -15,7 +15,7 @@ class ListViewGenerator(table : Table) extends ViewHelpers {
 
   val tableRowName = tableInfo.tableRowName
 
-  val listName = tableName + "s"
+  val listName = tableInfo.listName
 
   val controllerName = tableInfo.controllerName
 

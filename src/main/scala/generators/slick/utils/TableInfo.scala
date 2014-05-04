@@ -1,6 +1,6 @@
 package generators.slick.utils
 
-import scala.slick.model.{Column, Table}
+import scala.slick.model.{ForeignKey, Column, Table}
 import generators.utils.StringUtils
 import scala.slick.ast.ColumnOption.PrimaryKey
 
@@ -8,7 +8,11 @@ class TableInfo(table : Table) extends StringUtils{
 
   val columns : Seq[Column] = table.columns
 
+  val foreignKeys : Seq[ForeignKey] = table.foreignKeys
+
   val name : String = table.name.table
+
+  val listName : String = name + "s"
 
   val nameCamelCased : String = name.toCamelCase
 
