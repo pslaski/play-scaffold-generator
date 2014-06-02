@@ -1,6 +1,6 @@
 package generators.slick.utils
 
-import scala.slick.model.{QualifiedName, ForeignKey, Model}
+import scala.slick.model.{Table, QualifiedName, ForeignKey, Model}
 
 class ForeignKeyInfo(model : Model) {
 
@@ -21,6 +21,13 @@ class ForeignKeyInfo(model : Model) {
   }).toMap
 
   def foreignKeysReferencedTable(name : QualifiedName): Seq[ForeignKey] = foreignKeysReferencedTables(name)
+
+  val parentChildrenTables : Map[QualifiedName, Seq[Table]] = (tables map { table =>
+    val children = foreignKeys.filter(_.referencedTable == table.name).map(fk => tablesByName(fk.referencingTable))
+    (table.name, children)
+  }).toMap
+
+  def findForeignKeyBetween(parent : QualifiedName, child : QualifiedName) = foreignKeysReferencedTable(parent).find(_.referencingTable == child)
 
 }
 

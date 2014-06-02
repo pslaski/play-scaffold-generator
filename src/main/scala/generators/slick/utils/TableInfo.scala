@@ -4,7 +4,7 @@ import scala.slick.model.{ForeignKey, Column, Table}
 import generators.utils.StringUtils
 import scala.slick.ast.ColumnOption.PrimaryKey
 
-class TableInfo(table : Table) extends StringUtils{
+class TableInfo(val table : Table) extends StringUtils{
 
   val columns : Seq[Column] = table.columns
 
@@ -39,5 +39,7 @@ class TableInfo(table : Table) extends StringUtils{
   val controllerName = nameCamelCased + "Controller"
 
   val viewsPackage = name.toLowerCase
+
+  val isJunctionTable = !columns.exists(_.options.contains(PrimaryKey)) && foreignKeys.length >= 2
 
 }
