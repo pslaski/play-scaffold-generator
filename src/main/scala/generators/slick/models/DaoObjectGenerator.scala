@@ -91,19 +91,9 @@ ${methods}
   }
 
   def fixedMethodsForJunctionTable: Seq[String] = {
-    val cascadeChildData = foreignKeyInfo.foreignKeysReferencedTable(table.name).map{ fk =>
-      fk.onDelete match {
-        case ForeignKeyAction.Restrict => {
-          val tab = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
-          (tab.daoObjectName, tab.nameCamelCased)
-        }
-        case _ => ("", "")
-      }
-    }.filter(_._1 != "")
 
     Seq(saveJunctionMethodCode,
-        deleteMethodCode(cascadeChildData),
-        findAllMethodCode)
+        deleteJunctionMethodCode(table.foreignKeys))
   }
 
   def dynamicMethods : Seq[String] = {

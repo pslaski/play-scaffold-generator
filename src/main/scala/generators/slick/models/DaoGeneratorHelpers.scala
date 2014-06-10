@@ -78,12 +78,37 @@ def delete(${primaryKeyName}: ${primaryKeyType}) = {
   queryFindById.delete
 }""".trim()
   }
-  
+
+  def deleteChilds(childDao : String, childName : String) = {
+    s"${childDao}.delete${childName + "s"}For${queryObjectName}(obj)"
+  }
+
   def findByCode(fieldName : String) = {
     s"""
 for {
     row <- ${queryObjectName} if row.${fieldName} === ${fieldName}
   } yield row""".trim()
+  }
+
+  def deleteJunctionMethodCode(foreignKeys : Seq[ForeignKey]) = {
+
+    val idColumns = foreignKeys.map{ fk =>
+      fk.referencingColumns.map( col => col.name + " : " + col.tpe)
+    }.flatten.mkString(", ")
+
+    val findingColumns = foreignKeys.map{ fk =>
+      fk.referencingColumns.map(col => "row." + col.name + " === " + col.name)
+    }.flatten.mkString(" && ")
+
+    s"""
+def delete(${idColumns}) = {
+
+  val queryFindById = for {
+      row <- ${queryObjectName} if ${findingColumns}
+    } yield row
+
+  queryFindById.delete
+}""".trim()
   }
   
   def updateMethodCode = {
@@ -183,10 +208,6 @@ def formOptions : Seq[(String, String)] = {
     (row.${primaryKeyName}.toString, ${fieldsForSimpleName.map("row." + _).mkString(" + \" \" + ")})
   }
 }""".trim()
-  }
-
-  def deleteChilds(childDao : String, childName : String) = {
-    s"${childDao}.delete${childName + "s"}For${queryObjectName}(obj)"
   }
   
 }

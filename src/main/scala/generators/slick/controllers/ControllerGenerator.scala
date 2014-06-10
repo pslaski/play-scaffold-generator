@@ -46,10 +46,17 @@ class ControllerGenerator(table : Table, modelsPackage : String, foreignKeyInfo 
   override val parentDaoObjects: Seq[String] = table.foreignKeys.map { fk =>
     new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable)).daoObjectName
   }
-  override val childsData: Seq[(String, String, String)] = {
+  override val childsData: Seq[(String, String)] = {
     foreignKeyInfo.foreignKeysReferencedTable(table.name).map { fk =>
       val tabInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
-      (tabInfo.name, tabInfo.daoObjectName, primaryKeyName)
+      if(tabInfo.isJunctionTable){
+        val foreignKeyToSecondSide = tabInfo.foreignKeys.filter(_.referencedTable != table.name).head
+        val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
+        val tableSecondSideInfo = new TableInfo(tableSecondSide)
+        (tableSecondSideInfo.name, tableSecondSideInfo.daoObjectName)
+      } else {
+        (tabInfo.name, tabInfo.daoObjectName)
+      }
     }
   }
 

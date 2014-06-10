@@ -20,7 +20,7 @@ trait ControllerGeneratorHelpers extends StringUtils{
 
   val parentDaoObjects : Seq[String]
 
-  val childsData : Seq[(String, String, String)]
+  val childsData : Seq[(String, String)]
 
   def indexMethod = {
     s"""
@@ -74,13 +74,13 @@ def show(${primaryKeyName} : ${primaryKeyType}) = Action {
 
   def childsFinders = {
     childsData.map{ child =>
-      childFinder(child._1, child._2, child._3)
+      childFinder(child._1, child._2)
     }.mkString("\n")
   }
 
-  private def childFinder(child : String, childDao : String, foreignKeyName : String) = {
+  private def childFinder(child : String, childDao : String) = {
     val childName = child.toCamelCase.uncapitalize + "s"
-    s"val ${childName} = ${childDao}.${childName}For${tableName.toCamelCase}(obj.${foreignKeyName})"
+    s"val ${childName} = ${childDao}.${childName}For${tableName.toCamelCase}(obj)"
   }
 
   def editMethod = {
