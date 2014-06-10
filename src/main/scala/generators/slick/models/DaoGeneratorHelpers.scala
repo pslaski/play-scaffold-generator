@@ -1,6 +1,8 @@
 package generators.slick.models
 
 import generators.utils.StringUtils
+import generators.slick.utils.TableInfo
+import scala.slick.model.ForeignKey
 
 trait DaoGeneratorHelpers extends StringUtils{
 
@@ -25,6 +27,14 @@ def save(${rowName}: ${tableRowName}) : ${primaryKeyType} = {
   ${queryObjectName} returning ${queryObjectName}.map(_.${primaryKeyName}) insert(${rowName})
 }""".trim()
   }
+
+  def saveJunctionMethodCode = {
+
+    s"""
+def save(${rowName}: ${tableRowName}) = {
+  ${queryObjectName} insert(${rowName})
+}""".trim()
+  }
   
   def findAllMethodCode = {
     s"""
@@ -43,10 +53,27 @@ def findById(${primaryKeyName}: ${primaryKeyType}) : Option[${tableRowName}] = {
   }
   
   def deleteMethodCode(childData : Seq[(String,String)]) = {
+
+    val childsCode = {
+      if(childData.nonEmpty){
+s"""
+   val objOption = queryFindById.firstOption
+
+   objOption match {
+     case Some(obj) => {
+       ${childData.map(child => deleteChilds(child._1, child._2)).mkString("\n")}
+     }
+   }
+ """.trim()
+      } else ""
+    }
+
     s"""
 def delete(${primaryKeyName}: ${primaryKeyType}) = {
-  ${childData.map(child => deleteChilds(child._1, child._2)).mkString("\n")}
+
   val queryFindById = ${findByCode(primaryKeyName)}
+
+  ${childsCode}
 
   queryFindById.delete
 }""".trim()
@@ -70,12 +97,84 @@ def update(updatedRow: ${tableRowName}) = {
 }""".trim()
   }
 
-  def findByForeignKeyMethodCode(foreignKeyName : String, referencedTable : String) = {
+  def findByForeignKeyQueryMethodCode(referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
+
+    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
+
+    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}Query"
+
+    val joiningColumns = {
+      "row => " + ((foreignKey.referencingColumns.map(_.name) zip foreignKey.referencedColumns.map(_.name)).map{
+        case (lcol,rcol) => "row."+lcol + " === " + referencedRow + "." + rcol
+      }.mkString(" && "))
+    }
+
   s"""
-def ${rowNameCamelCased.uncapitalize+"s"}For${referencedTable}(${foreignKeyName}: Long) : List[${tableRowName}] = {
-  ${queryObjectName}.filter(_.${foreignKeyName} === ${foreignKeyName}).list
-}""".trim()
+def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
+  ${queryObjectName}.filter(${joiningColumns})
 }
+""".trim()
+  }
+
+  def findByForeignKeyMethodCode(referencedTableInfo : TableInfo) = {
+
+    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
+
+    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}"
+
+    val queryName = methodName + "Query"
+
+  s"""
+def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) : List[${tableRowName}] = {
+  ${queryName}(${referencedRow}).list
+}
+""".trim()
+  }
+
+  def deleteByForeignKeyMethodCode(referencedTableInfo : TableInfo) = {
+
+    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
+
+    val methodName = s"delete${rowNameCamelCased +"s"}For${referencedTableInfo.nameCamelCased}"
+
+    val queryName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}Query"
+
+    s"""
+def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
+  ${queryName}(${referencedRow}).delete
+}
+""".trim()
+  }
+
+  def findByJunctionTableMethodCode(junctionTableInfo : TableInfo,referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
+
+    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
+
+    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}"
+
+    val junctionRow = junctionTableInfo.name
+
+    val joiningColumns = {
+      "row => " + ((foreignKey.referencedColumns.map(_.name) zip foreignKey.referencingColumns.map(_.name)).map{
+        case (lcol,rcol) => "row."+lcol + " === " + junctionRow + "." + rcol
+      }.mkString(" && "))
+    }
+
+    val findJunctionQueryName = s"${junctionTableInfo.nameCamelCasedUncapitalized+"s"}For${referencedTableInfo.nameCamelCased}Query"
+
+    val resultListName = rowNameCamelCased.uncapitalize+"s"
+
+  s"""
+def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) : List[${tableRowName}] = {
+  val query = for {
+    ${junctionRow} <- ${junctionTableInfo.daoObjectName}.${findJunctionQueryName}(${referencedRow})
+    ${resultListName} <- ${queryObjectName}.filter(${joiningColumns})
+  } yield ${resultListName}
+
+  query.list
+}
+""".trim()
+  }
 
   def formOptionsMethodCode = {
     s"""
@@ -86,17 +185,8 @@ def formOptions : Seq[(String, String)] = {
 }""".trim()
   }
 
-  def deleteByForeignKeyMethodCode(foreignKeyName : String, referencedTable : String) = {
-    s"""
-def delete${rowNameCamelCased+"s"}For${referencedTable}(${foreignKeyName} : Long) = {
-  ${rowNameCamelCased.uncapitalize+"s"}For${referencedTable}(${foreignKeyName}) map {  row =>
-    delete(row.${primaryKeyName})
-  }
-}""".trim()
-  }
-
   def deleteChilds(childDao : String, childName : String) = {
-    s"${childDao}.delete${childName + "s"}For${queryObjectName}(${primaryKeyName})"
+    s"${childDao}.delete${childName + "s"}For${queryObjectName}(obj)"
   }
   
 }

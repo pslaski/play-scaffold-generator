@@ -21,21 +21,21 @@ object DaoObjectGenerator {
 
 class DaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with DaoGeneratorHelpers with SlickGeneratorHelpers {
 
-  val tableInfo = new TableInfo(table)
+  val mainTableInfo = new TableInfo(table)
 
-  override val rowName: String = tableInfo.name.toLowerCase
+  override val rowName: String = mainTableInfo.name.toLowerCase
 
   override val rowNameCamelCased : String = rowName.toCamelCase
 
-  override val primaryKeyName: String = tableInfo.primaryKeyName
-  override val primaryKeyType: String = tableInfo.primaryKeyType
+  override val primaryKeyName: String = mainTableInfo.primaryKeyName
+  override val primaryKeyType: String = mainTableInfo.primaryKeyType
 
-  override val tableRowName: String = tableInfo.tableRowName
-  override val queryObjectName: String = tableInfo.queryObjectName
+  override val tableRowName: String = mainTableInfo.tableRowName
+  override val queryObjectName: String = mainTableInfo.queryObjectName
 
-  val objectName = tableInfo.daoObjectName
+  val objectName = mainTableInfo.daoObjectName
 
-  override val fieldsForSimpleName = tableInfo.columns.take(5).map{ col =>
+  override val fieldsForSimpleName = mainTableInfo.columns.take(5).map{ col =>
     if(col.nullable) col.name + ".getOrElse(\"\")"
     else col.name
   }
@@ -67,7 +67,11 @@ ${methods}
   }
 
   def fixedMethods : Seq[String] = {
+    if(mainTableInfo.isJunctionTable) fixedMethodsForJunctionTable
+    else fixedMethodsForSimpleTable
+  }
 
+  def fixedMethodsForSimpleTable : Seq[String] = {
     val cascadeChildData = foreignKeyInfo.foreignKeysReferencedTable(table.name).map{ fk =>
       fk.onDelete match {
         case ForeignKeyAction.Restrict => {
@@ -86,14 +90,45 @@ ${methods}
         formOptionsMethodCode)
   }
 
+  def fixedMethodsForJunctionTable: Seq[String] = {
+    val cascadeChildData = foreignKeyInfo.foreignKeysReferencedTable(table.name).map{ fk =>
+      fk.onDelete match {
+        case ForeignKeyAction.Restrict => {
+          val tab = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
+          (tab.daoObjectName, tab.nameCamelCased)
+        }
+        case _ => ("", "")
+      }
+    }.filter(_._1 != "")
+
+    Seq(saveJunctionMethodCode,
+        deleteMethodCode(cascadeChildData),
+        findAllMethodCode)
+  }
+
   def dynamicMethods : Seq[String] = {
 
-    table.foreignKeys.map { fk =>
-      val referencedTable = new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable))
-      Seq(findByForeignKeyMethodCode(fk.referencingColumns.head.name, referencedTable.nameCamelCased),
-      deleteByForeignKeyMethodCode(fk.referencingColumns.head.name, referencedTable.nameCamelCased))
+    val tableChildren = foreignKeyInfo.parentChildrenTables(table.name)
+
+    val joinedByJunctionTable = tableChildren.map{ child =>
+      val childTableInfo = new TableInfo(child)
+      if(childTableInfo.isJunctionTable){
+        val foreignKeyToFirstSide = childTableInfo.foreignKeys.filter(_.referencedTable == table.name).head
+        val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
+        val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
+        val tableSecondSideInfo = new TableInfo(tableSecondSide)
+        Seq(findByJunctionTableMethodCode(childTableInfo, tableSecondSideInfo, foreignKeyToFirstSide))
+      } else Seq.empty
     }.flatten
 
+    val joinedByForeignKey = table.foreignKeys.map { fk =>
+      val referencedTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable))
+      Seq(findByForeignKeyQueryMethodCode(referencedTableInfo, fk),
+        findByForeignKeyMethodCode(referencedTableInfo),
+        deleteByForeignKeyMethodCode(referencedTableInfo))
+    }.flatten
+
+    joinedByJunctionTable ++ joinedByForeignKey
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {

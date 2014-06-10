@@ -1,6 +1,6 @@
 package generators.slick.utils
 
-import scala.slick.model.{ForeignKey, Column, Table}
+import scala.slick.model.{PrimaryKey, ForeignKey, Column, Table}
 import generators.utils.StringUtils
 import scala.slick.ast.ColumnOption.PrimaryKey
 
@@ -24,7 +24,15 @@ class TableInfo(val table : Table) extends StringUtils{
 
   val queryObjectName : String = nameCamelCased
 
-  lazy val primaryKeyOpt = columns.find(_.options.contains(PrimaryKey))
+  val primaryKey = table.primaryKey.getOrElse{
+    val cols = primaryKeyOpt match {
+      case Some(col) => Seq(col)
+      case None => Seq.empty
+    }
+    new PrimaryKey(None, table.name, cols)
+  }
+
+  lazy val primaryKeyOpt = columns.find(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey))
 
   lazy val (primaryKeyName, primaryKeyType) = primaryKeyOpt match {
         case Some(col) => (col.name, col.tpe)
@@ -40,6 +48,6 @@ class TableInfo(val table : Table) extends StringUtils{
 
   val viewsPackage = name.toLowerCase
 
-  val isJunctionTable = !columns.exists(_.options.contains(PrimaryKey)) && foreignKeys.length >= 2
+  val isJunctionTable = !columns.exists(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey)) && foreignKeys.length >= 2
 
 }

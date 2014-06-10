@@ -1,7 +1,6 @@
 package generators.slick.models
 
 import generators.utils.{ModelProvider, Config}
-import generators.slick.utils.{ForeignKeyInfo, TableInfo}
 
 object TablesGenerator{
   def generate(config : Config, outputFolder : String) = {
@@ -14,94 +13,6 @@ object TablesGenerator{
 
     val mainModel = modelProvider.model
     val codegen = new scala.slick.model.codegen.SourceCodeGenerator(mainModel){
-
-
-      override def Table = new Table(_){
-        override def EntityType = new EntityType {
-          override def code = {
-            super.code + classBody
-          }
-
-          val mainTableInfo = new TableInfo(model)
-
-          val foreignKeyInfo = new ForeignKeyInfo(mainModel)
-
-          val tableChildren = foreignKeyInfo.parentChildrenTables(model.name)
-
-          val joiningMethods = tableChildren.map{ table =>
-            val tableInfo = new TableInfo(table)
-            joiningMethod(tableInfo)
-          }
-
-
-         def classBody = {
-           if(joiningMethods.nonEmpty) {
-s"""
-{
-  ${indent(joiningMethods.mkString("\n"))}
-}
-""".trim
-           }
-           else ""
-         }
-
-          def joiningMethod(tableInfo : TableInfo) = {
-            if(tableInfo.isJunctionTable) manyToManyJoinMethod(tableInfo)
-            else oneToManyJoinMethod(tableInfo)
-          }
-
-          def oneToManyJoinMethod(tableInfo : TableInfo) = {
-
-            val columns = {
-              foreignKeyInfo.findForeignKeyBetween(mainTableInfo.table.name, tableInfo.table.name).map{ fk =>
-                "row => " + ((fk.referencingColumns.map(_.name) zip fk.referencedColumns.map(_.name)).map{
-                  case (lcol,rcol) => "row."+lcol + " === " + rcol
-                }.mkString(" && "))
-              }
-            }
-
-s"""
-def ${tableInfo.listName} : List[${tableInfo.tableRowName}] = {
- ${tableInfo.queryObjectName}.filter(${columns.get}).list
-}
-""".trim
-          }
-
-          def manyToManyJoinMethod(tableInfo : TableInfo) = {
-
-            val foreignKeyToFirstSide = tableInfo.foreignKeys.filter(_.referencedTable == mainTableInfo.table.name).head
-
-            val columnsJoiningLeftWithJunctionTable = {
-              "row => " + ((foreignKeyToFirstSide.referencingColumns.map(_.name) zip foreignKeyToFirstSide.referencedColumns.map(_.name)).map{
-                case (lcol,rcol) => "row."+lcol + " === " + rcol
-              }.mkString(" && "))
-            }
-
-            val foreignKeyToSecondSide = tableInfo.foreignKeys.filter(_.referencedTable != mainTableInfo.table.name).head
-
-            val columnsJoiningJunctionWithRightTable = {
-              "row => " + ((foreignKeyToSecondSide.referencingColumns.map(_.name) zip foreignKeyToSecondSide.referencedColumns.map(_.name)).map{
-                case (lcol,rcol) => "row."+lcol + " === " + tableInfo.name +"." + rcol
-              }.mkString(" && "))
-            }
-
-            val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
-
-            val tableSecondSideInfo = new TableInfo(tableSecondSide)
-
-s"""
-def ${tableSecondSideInfo.listName} : List[${tableSecondSideInfo.tableRowName}] = {
- val query = for {
-   ${tableInfo.name} <- ${tableInfo.queryObjectName}.filter(${columnsJoiningLeftWithJunctionTable})
-   ${tableSecondSideInfo.listName} <- ${tableSecondSideInfo.queryObjectName}.filter(${columnsJoiningJunctionWithRightTable})
- } yield ${tableSecondSideInfo.listName}
-
- query.list
-}
-""".trim
-          }
-        }
-      }
 
       // Generate auto-join conditions 1
       // append autojoin conditions to generated code
