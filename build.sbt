@@ -6,7 +6,7 @@ scalaVersion := "2.10.3"
 
 sbtPlugin := true
        
-libraryDependencies += "com.typesafe.slick" %% "slick" % "2.0.1"
+libraryDependencies += "com.typesafe.slick" %% "slick" % "2.0.2"
 
 //libraryDependencies += "org.postgresql" % "postgresql" % "9.3-1101-jdbc41"
 
