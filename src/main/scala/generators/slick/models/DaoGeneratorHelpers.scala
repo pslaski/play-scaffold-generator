@@ -63,6 +63,7 @@ s"""
      case Some(obj) => {
        ${childData.map(child => deleteChilds(child._1, child._2)).mkString("\n")}
      }
+     case None => "Not finded"
    }
  """.trim()
       } else ""

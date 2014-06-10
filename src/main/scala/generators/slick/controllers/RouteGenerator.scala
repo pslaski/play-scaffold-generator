@@ -2,13 +2,26 @@ package generators.slick.controllers
 
 import generators.utils.OutputHelpers
 import scala.slick.model.Table
-import generators.slick.utils.TableInfo
+import generators.slick.utils.{ForeignKeyInfo, TableInfo}
 
-class RouteGenerator(table : Table) extends OutputHelpers {
+class RouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers {
 
   val tableInfo = new TableInfo(table)
 
   override def code: String = {
+    if(tableInfo.isJunctionTable) {
+      routesForJunctionTable.mkString("\n")
+    }
+    else {
+      routesForSimpleTable.mkString("\n")
+    }
+  }
+
+  override def indent(code: String): String = "\n" + code + "\n"
+
+  lazy val routesForSimpleTable = {
+    val deleteJunctionsRoutes = foreignKeyInfo.parentChildrenTablesInfo(table.name).filter(_.isJunctionTable).map(deleteJunctionRoute(_))
+
     Seq(comment,
         indexRoute,
         listRoute,
@@ -17,10 +30,15 @@ class RouteGenerator(table : Table) extends OutputHelpers {
         editRoute,
         updateRoute,
         showRoute,
-        deleteRoute).mkString("\n")
+        deleteRoute) ++ deleteJunctionsRoutes
   }
 
-  override def indent(code: String): String = "\n" + code + "\n"
+  lazy val routesForJunctionTable = {
+    Seq(comment,
+        indexRoute,
+        createRoute,
+        saveRoute)
+  }
 
   val tableUrl = tableInfo.name + "s"
 
@@ -64,5 +82,15 @@ class RouteGenerator(table : Table) extends OutputHelpers {
 
   def deleteRoute = {
     s"GET${separator}/${tableUrl}/delete/:id${separator}controllers.${controllerName}.delete(id: ${primaryKeyType})"
+  }
+
+  def deleteJunctionRoute(tabInfo : TableInfo) = {
+    val methodName = "delete" + tabInfo.nameCamelCased
+
+    val idColumns = tabInfo.foreignKeys.map{ fk =>
+      fk.referencingColumns.map(col => col.name + " : " + col.tpe)
+    }.flatten.mkString(", ")
+
+    s"GET${separator}/${tableUrl}/${methodName}${separator}controllers.${controllerName}.${methodName}(${idColumns})"
   }
 }

@@ -1,6 +1,7 @@
 package generators.slick.controllers
 
 import generators.utils.StringUtils
+import generators.slick.utils.TableInfo
 
 trait ControllerGeneratorHelpers extends StringUtils{
 
@@ -29,6 +30,13 @@ def index = Action {
 }""".trim()
   }
 
+  def indexJunctionMethod = {
+    s"""
+def index = Action {
+  Redirect(routes.${controllerName}.create)
+}""".trim()
+  }
+
   def listMethod = {
     s"""
 def list = Action {
@@ -38,7 +46,7 @@ def list = Action {
 
   def createMethod = {
     s"""
-def create = Action {
+def create = Action { implicit request =>
   Ok(views.html.${viewsPackage}.createForm(${formName}${formOptions}))
 }""".trim()
   }
@@ -53,6 +61,21 @@ def save = Action { implicit request =>
     formData => {
       val id = ${daoObjectName}.save(formData)
       Redirect(routes.${controllerName}.show(id))
+    }
+  )
+}""".trim()
+  }
+
+  def saveJunctionMethod = {
+    s"""
+def save = Action { implicit request =>
+  ${formName}.bindFromRequest.fold(
+      formWithErrors => {
+      BadRequest(views.html.${viewsPackage}.createForm(formWithErrors${formOptions}))
+    },
+    formData => {
+      ${daoObjectName}.save(formData)
+      Redirect(routes.${controllerName}.create).flashing("success" -> "${tableName.toCamelCase} saved")
     }
   )
 }""".trim()
@@ -113,6 +136,24 @@ def delete(${primaryKeyName} : ${primaryKeyType}) = Action {
   ${daoObjectName}.delete(${primaryKeyName})
   Redirect(routes.${controllerName}.list)
 }""".trim()
+  }
+
+  def deleteJunctionMethod(junctionTableInfo : TableInfo) = {
+
+    val idColumns = junctionTableInfo.foreignKeys.map{ fk =>
+      fk.referencingColumns.map( col => col.name + " : " + col.tpe)
+    }.flatten.mkString(", ")
+
+    val deleteArgs = junctionTableInfo.foreignKeys.map{ fk =>
+      fk.referencingColumns.map(_.name)
+    }.flatten.mkString(", ")
+
+    s"""
+def delete${junctionTableInfo.nameCamelCased}(${idColumns}) = Action {
+  ${junctionTableInfo.daoObjectName}.delete(${deleteArgs})
+  Redirect(routes.${controllerName}.show(${primaryKeyName}))
+}
+""".trim()
   }
 
   private def showViewOptions = {

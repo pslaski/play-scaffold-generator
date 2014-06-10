@@ -98,18 +98,16 @@ ${methods}
 
   def dynamicMethods : Seq[String] = {
 
-    val tableChildren = foreignKeyInfo.parentChildrenTables(table.name)
+    val tableChildrenInfo = foreignKeyInfo.parentChildrenTablesInfo(table.name)
 
-    val joinedByJunctionTable = tableChildren.map{ child =>
-      val childTableInfo = new TableInfo(child)
-      if(childTableInfo.isJunctionTable){
-        val foreignKeyToFirstSide = childTableInfo.foreignKeys.filter(_.referencedTable == table.name).head
-        val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
-        val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
-        val tableSecondSideInfo = new TableInfo(tableSecondSide)
-        Seq(findByJunctionTableMethodCode(childTableInfo, tableSecondSideInfo, foreignKeyToFirstSide))
-      } else Seq.empty
-    }.flatten
+    val joinedByJunctionTable = tableChildrenInfo.filter(_.isJunctionTable).map{ childTableInfo =>
+      val foreignKeyToFirstSide = childTableInfo.foreignKeys.filter(_.referencedTable == table.name).head
+      val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
+      val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
+      val tableSecondSideInfo = new TableInfo(tableSecondSide)
+
+      findByJunctionTableMethodCode(childTableInfo, tableSecondSideInfo, foreignKeyToFirstSide)
+    }
 
     val joinedByForeignKey = table.foreignKeys.map { fk =>
       val referencedTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable))

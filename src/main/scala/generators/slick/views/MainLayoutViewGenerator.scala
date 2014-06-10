@@ -2,18 +2,11 @@ package generators.slick.views
 
 import scala.slick.model.{Table, Model}
 import generators.utils.{StringUtils, OutputHelpers}
+import generators.slick.utils.TableInfo
 
 class MainLayoutViewGenerator(model : Model, appName : String) extends OutputHelpers with StringUtils{
 
-  val tables = model.tables map tableName
-
-  def tableName(table : Table) = table.name.table.toCamelCase
-
-  val controllers = tables map controllerName
-
-  def controllerName(name : String) = name + "Controller"
-
-  val names : Seq[(String, String)] = (controllers, tables).zipped.toSeq
+  val tablesInfo = model.tables.map(new TableInfo(_))
 
   def menu = {
     s"""
@@ -26,9 +19,10 @@ class MainLayoutViewGenerator(model : Model, appName : String) extends OutputHel
   }
 
   def menuRows = {
-    (names.map { name =>
-       s"""<li><a href="@routes.${name._1}.list">${name._2}</a></li>"""
-    }).mkString("\n")
+    tablesInfo.map { tabInfo =>
+      if(tabInfo.isJunctionTable) s"""<li><a href="@routes.${tabInfo.controllerName}.create">${tabInfo.nameCamelCased}</a></li>"""
+      else s"""<li><a href="@routes.${tabInfo.controllerName}.list">${tabInfo.nameCamelCased}</a></li>"""
+    }.mkString("\n")
   }
 
   def code = {

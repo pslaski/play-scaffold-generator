@@ -22,8 +22,8 @@ class ForeignKeyInfo(model : Model) {
 
   def foreignKeysReferencedTable(name : QualifiedName): Seq[ForeignKey] = foreignKeysReferencedTables(name)
 
-  val parentChildrenTables : Map[QualifiedName, Seq[Table]] = (tables map { table =>
-    val children = foreignKeys.filter(_.referencedTable == table.name).map(fk => tablesByName(fk.referencingTable))
+  val parentChildrenTablesInfo : Map[QualifiedName, Seq[TableInfo]] = (tables map { table =>
+    val children = foreignKeys.filter(_.referencedTable == table.name).map(fk => new TableInfo(tablesByName(fk.referencingTable)))
     (table.name, children)
   }).toMap
 

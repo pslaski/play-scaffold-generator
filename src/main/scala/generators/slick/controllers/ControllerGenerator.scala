@@ -24,24 +24,24 @@ object ControllerGenerator {
 
 class ControllerGenerator(table : Table, modelsPackage : String, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with ControllerGeneratorHelpers with SlickGeneratorHelpers {
 
-  val tableInfo = new TableInfo(table)
+  val mainTableInfo = new TableInfo(table)
 
-  override val tableName: String = tableInfo.name
+  override val tableName: String = mainTableInfo.name
 
-  val columns = tableInfo.columns
+  val columns = mainTableInfo.columns
 
-  val tableRowName = tableInfo.tableRowName
+  val tableRowName = mainTableInfo.tableRowName
 
-  override val formName = tableInfo.formName
+  override val formName = mainTableInfo.formName
 
-  override val controllerName = tableInfo.controllerName
+  override val controllerName = mainTableInfo.controllerName
 
-  override val daoObjectName = tableInfo.daoObjectName
+  override val daoObjectName = mainTableInfo.daoObjectName
 
-  override val viewsPackage = tableInfo.viewsPackage
+  override val viewsPackage = mainTableInfo.viewsPackage
 
-  override val primaryKeyName: String = tableInfo.primaryKeyName
-  override val primaryKeyType: String = tableInfo.primaryKeyType
+  override val primaryKeyName: String = mainTableInfo.primaryKeyName
+  override val primaryKeyType: String = mainTableInfo.primaryKeyType
 
   override val parentDaoObjects: Seq[String] = table.foreignKeys.map { fk =>
     new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable)).daoObjectName
@@ -94,15 +94,27 @@ object ${objectName} extends Controller {
   }
 
   def methods : String = {
-    Seq(indexMethod,
-        listMethod,
-        createMethod,
-        saveMethod,
-        showMethod,
-        editMethod,
-        updateMethod,
-        deleteMethod).mkString("\n\n")
+    if(mainTableInfo.isJunctionTable) methodsForJunctionTable.mkString("\n\n")
+    else methodsForSimpleTable.mkString("\n\n")
   }
+  
+  def methodsForSimpleTable = {
+    val childTablesInfo = foreignKeyInfo.parentChildrenTablesInfo(table.name)
+    val deleteJunctionMethods = childTablesInfo.filter(_.isJunctionTable).map(deleteJunctionMethod(_))
+
+    Seq(indexMethod,
+      listMethod,
+      createMethod,
+      saveMethod,
+      showMethod,
+      editMethod,
+      updateMethod,
+      deleteMethod) ++ deleteJunctionMethods
+  }
+  
+  def methodsForJunctionTable = Seq(indexJunctionMethod,
+                                    createMethod,
+                                    saveJunctionMethod)
 
   def form = {
     "val " + formName + " = " + formObject
@@ -150,7 +162,7 @@ Form(
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= controllerName +  ".scala") {
-      val routeGenerator = new RouteGenerator(table)
+      val routeGenerator = new RouteGenerator(table, foreignKeyInfo)
       routeGenerator.appendToFile("conf", "routes")
       writeStringToFile(packageCode(pkg), folder, pkg, fileName)
     }

@@ -2,7 +2,7 @@ package generators.slick.views
 
 import scala.slick.model.Table
 import generators.slick.css.MainCssGenerator
-import generators.slick.utils.{ForeignKeyInfo, DriverLoader}
+import generators.slick.utils.{TableInfo, ForeignKeyInfo}
 import generators.utils.{ModelProvider, Config}
 
 object ViewGenerator {
@@ -20,12 +20,15 @@ object ViewGenerator {
 
     model.tables map { table =>
       val outputPkg = pkg + "." + table.name.table
-      new ViewGenerator(table, foreignKeyInfo, outputFolder, outputPkg).generate
+      val tableInfo = new TableInfo(table)
+
+      if(tableInfo.isJunctionTable) new JunctionViewGenerator(table, outputFolder, outputPkg).generate
+      else new FullViewGenerator(table, foreignKeyInfo, outputFolder, outputPkg).generate
     }
   }
 }
 
-class ViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo, folder:String, pkg: String)  {
+class FullViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo, folder:String, pkg: String)  {
 
   val createFormViewGenerator = new CreateFormViewGenerator(table)
 
@@ -40,6 +43,16 @@ class ViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo, folder:Strin
     editFormViewGenerator.writeToFile(folder, pkg, "editForm.scala.html")
     listViewGenerator.writeToFile(folder, pkg, "list.scala.html")
     showViewGenerator.writeToFile(folder, pkg, "show.scala.html")
+  }
+
+}
+
+class JunctionViewGenerator(table : Table, folder:String, pkg: String)  {
+
+  val createFormViewGenerator = new CreateFormViewJunctionGenerator(table)
+
+  def generate = {
+    createFormViewGenerator.writeToFile(folder, pkg, "createForm.scala.html")
   }
 
 }
