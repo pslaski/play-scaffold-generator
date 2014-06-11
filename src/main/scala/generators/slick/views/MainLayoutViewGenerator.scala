@@ -73,10 +73,12 @@ class MainLayoutViewGenerator(model : Model, appName : String) extends OutputHel
 	    </div>
 
 	    <div class="container" role="main">
-            <div class="jumbotron">
-			    @content
+            <div class="row content-wrapper">
+                <div class="col-lg-12">
+                    @content
+                </div>
             </div>
-	    </div>
+      </div>
         <script src="//code.jquery.com/jquery-1.11.0.min.js" type="text/javascript"></script>
         <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js" type="text/javascript"></script>
     </body>

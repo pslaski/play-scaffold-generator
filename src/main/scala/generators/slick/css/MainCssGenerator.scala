@@ -8,6 +8,14 @@ object MainCssGenerator extends OutputHelpers{
 body {
   padding-top: 50px;
 }
+
+div.content-wrapper {
+    padding: 20px 10px 10px 10px;
+}
+
+.panel-heading > .btn-group {
+    top: -18px;
+}
      """.trim
   }
 

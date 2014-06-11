@@ -21,41 +21,63 @@ class ListViewGenerator(table : Table) extends ViewHelpers {
 
   val primaryKeyName = tableInfo.primaryKeyName
 
+  val fieldsAmount = 5
+
   override val arguments = Seq((listName, "List[Tables." + tableRowName + "]"))
 
   override def imports: String = ""
 
   override def bodyCode: String = {
     s"""
-<h2>${listName.toUpperCase}</h2>
-<p><a href="@routes.${controllerName}.create" class="btn btn-primary">Add new ${tableName}</a></p>
-
-<ul class="list-group">
-    @for(${tableName} <- ${listName}) {
-        <li class="list-group-item">
-
-            ${row}
-
-            ${buttons}
-        </li>
-    }
-</ul>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">${listName.toUpperCase}</h3>
+        <div class="pull-right btn-group">
+            <a href="@routes.${controllerName}.create" class="btn btn-primary btn-xs">Add new ${tableName}</a>
+        </div>
+    </div>
+    <div class="panel-body">
+        <table class="table table-hover table-bordered table-responsive">
+            <thead>
+                ${headers}
+            </thead>
+            <tbody>
+            @for(${tableName} <- ${listName}) {
+                <tr>
+                    ${rows}
+                    <td class="text-center">
+                        ${buttons}
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
 """.trim()
   }
 
+  def headers = {
+    (columns.take(fieldsAmount).map("<th>" + _.name + "</th>") :+ "<th>Actions</th>").mkString("\n")
+  }
 
-  def row = {
-    (columns.take(5) map { col =>
+  def rows = {
+    (columns.take(fieldsAmount) map { col =>
       if(col.nullable)  printOptionalField(col.name.toLowerCase)
-      else s"@${tableName}.${col.name.toLowerCase}"
-    }).mkString(" ")
+      else printField(col.name.toLowerCase)
+    }).mkString("\n")
+  }
+
+  def printField(field : String) = {
+    s"<td>@${tableName}.${field}</td>"
   }
 
   def printOptionalField(field : String) = {
     s"""
-@${tableName}.${field}.map { ${field} =>
-          @${field}
-        }
+<td>@${tableName}.${field}.map { ${field} =>
+      @${field}
+    }
+</td>
 """.trim()
   }
 
