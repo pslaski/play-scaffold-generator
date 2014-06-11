@@ -40,11 +40,11 @@ ${actions}
   }
 
   def formField(column : Column) = {
-    if(column.name.equals(primaryKeyName)){
-      inputPrimaryKeyCode(column.name)
+    if(column.name.toLowerCase.equals(primaryKeyName)){
+      inputPrimaryKeyCode(column.name.toLowerCase)
     }
     else if(foreignKeys.exists(_._1.equals(column.name))){
-      selectCode(column.name, foreignKeys.find(_._1.equals(column.name)).get._2)
+      selectCode(column.name.toLowerCase, foreignKeys.find(_._1.equals(column.name)).get._2)
     }
     else {
       convertTypeToInput(column)
@@ -52,7 +52,7 @@ ${actions}
   }
 
   def convertTypeToInput(column : Column) = {
-    val (name, tpe) = (column.name, column.tpe)
+    val (name, tpe) = (column.name.toLowerCase, column.tpe)
     tpe match {
       case "java.sql.Date" => inputDateCode(name)
       case "Boolean" => checkboxCode(name)

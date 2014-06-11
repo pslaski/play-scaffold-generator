@@ -148,10 +148,12 @@ def delete(${primaryKeyName} : ${primaryKeyType}) = Action {
       fk.referencingColumns.map(_.name)
     }.flatten.mkString(", ")
 
+    val parentPk = junctionTableInfo.foreignKeys.filter(_.referencedTable.table.equals(tableName)).head.referencingColumns.head.name
+
     s"""
 def delete${junctionTableInfo.nameCamelCased}(${idColumns}) = Action {
   ${junctionTableInfo.daoObjectName}.delete(${deleteArgs})
-  Redirect(routes.${controllerName}.show(${primaryKeyName}))
+  Redirect(routes.${controllerName}.show(${parentPk}))
 }
 """.trim()
   }

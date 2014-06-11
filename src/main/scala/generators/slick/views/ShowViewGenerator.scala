@@ -53,18 +53,18 @@ ${buttons}
       if(col.nullable) {
         if(isColumnForeignKey(col)){
           val parentTableInfo = new TableInfo(foreignKeyInfo.tablesByName(foreignKeys.find(_.referencingColumns.head.name.equals(col.name)).get.referencedTable))
-          printOptionalForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, col.name)
+          printOptionalForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, col.name.toLowerCase)
         }
         else {
-          s"<p>${col.name} : ${printOptionalField(col.name)}</p>"
+          s"<p>${col.name} : ${printOptionalField(col.name.toLowerCase)}</p>"
         }
       }
       else {
         if(isColumnForeignKey(col)) {
           val parentTableInfo = new TableInfo(foreignKeyInfo.tablesByName(foreignKeys.find(_.referencingColumns.head.name.equals(col.name)).get.referencedTable))
-          printForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, col.name)
+          printForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, col.name.toLowerCase)
         }
-        else s"<p>${col.name} : @${tableName}.${col.name}</p>"
+        else s"<p>${col.name} : @${tableName}.${col.name.toLowerCase}</p>"
       }
     }).mkString("\n")
   }
@@ -84,7 +84,7 @@ ${buttons}
   def printOptionalForeignKeyField(parentName: String, parentControllerName : String, foreignKey : String) = {
     s"""
 @${tableName}.${foreignKey}.map { ${foreignKey} =>
-          ${printForeignKeyField(parentName, parentControllerName, foreignKey)}
+          <p>${parentName} : <a href="@routes.${parentControllerName}.show(${foreignKey})" class="btn btn-default">@${foreignKey}</a> </p>
         }
 """.trim()
   }
@@ -136,9 +136,9 @@ ${buttons}
 
     val deleteArgs = junctionTableInfo.foreignKeys.map{ fk =>
       if(fk.referencedTable.table.equals(referencedTableInfo.table.name.table)) {
-        fk.referencedColumns.map(referencedTableInfo.name + "." + _.name)
+        fk.referencedColumns.map(referencedTableInfo.name + "." + _.name.toLowerCase)
       }
-      else fk.referencedColumns.map(tableName + "." + _.name)
+      else fk.referencedColumns.map(tableName + "." + _.name.toLowerCase)
     }.flatten.mkString(", ")
 
     s"""
@@ -157,7 +157,7 @@ ${buttons}
 
   def childRow(rowName : String, columns : Seq[Column]) = {
     columns.take(5).map{ col =>
-      s"@${rowName}.${col.name}"
+      s"@${rowName}.${col.name.toLowerCase}"
     }.mkString(" ")
   }
 

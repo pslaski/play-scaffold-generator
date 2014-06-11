@@ -35,10 +35,10 @@ class TableInfo(val table : Table) extends StringUtils{
   lazy val primaryKeyOpt = columns.find(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey))
 
   lazy val (primaryKeyName, primaryKeyType) = primaryKeyOpt match {
-        case Some(col) => (col.name, col.tpe)
+        case Some(col) => (col.name.toLowerCase, col.tpe)
         case None => {
           val col = columns.head
-          (col.name, col.tpe)
+          (col.name.toLowerCase, col.tpe)
         }
       }
 

@@ -94,11 +94,11 @@ for {
   def deleteJunctionMethodCode(foreignKeys : Seq[ForeignKey]) = {
 
     val idColumns = foreignKeys.map{ fk =>
-      fk.referencingColumns.map( col => col.name + " : " + col.tpe)
+      fk.referencingColumns.map( col => col.name.toLowerCase + " : " + col.tpe)
     }.flatten.mkString(", ")
 
     val findingColumns = foreignKeys.map{ fk =>
-      fk.referencingColumns.map(col => "row." + col.name + " === " + col.name)
+      fk.referencingColumns.map(col => "row." + col.name.toLowerCase + " === " + col.name.toLowerCase)
     }.flatten.mkString(" && ")
 
     s"""
@@ -131,7 +131,7 @@ def update(updatedRow: ${tableRowName}) = {
 
     val joiningColumns = {
       "row => " + ((foreignKey.referencingColumns.map(_.name) zip foreignKey.referencedColumns.map(_.name)).map{
-        case (lcol,rcol) => "row."+lcol + " === " + referencedRow + "." + rcol
+        case (lcol,rcol) => "row."+lcol.toLowerCase + " === " + referencedRow + "." + rcol.toLowerCase
       }.mkString(" && "))
     }
 
@@ -182,7 +182,7 @@ def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
 
     val joiningColumns = {
       "row => " + ((foreignKey.referencedColumns.map(_.name) zip foreignKey.referencingColumns.map(_.name)).map{
-        case (lcol,rcol) => "row."+lcol + " === " + junctionRow + "." + rcol
+        case (lcol,rcol) => "row."+lcol.toLowerCase + " === " + junctionRow + "." + rcol.toLowerCase
       }.mkString(" && "))
     }
 

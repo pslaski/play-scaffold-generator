@@ -19,7 +19,7 @@ object ViewGenerator {
     MainCssGenerator.writeToFile("public", "stylesheets")
 
     model.tables map { table =>
-      val outputPkg = pkg + "." + table.name.table
+      val outputPkg = pkg + "." + table.name.table.toLowerCase
       val tableInfo = new TableInfo(table)
 
       if(tableInfo.isJunctionTable) new JunctionViewGenerator(table, outputFolder, outputPkg).generate

@@ -46,8 +46,8 @@ class ListViewGenerator(table : Table) extends ViewHelpers {
 
   def row = {
     (columns.take(5) map { col =>
-      if(col.nullable)  printOptionalField(col.name)
-      else s"@${tableName}.${col.name}"
+      if(col.nullable)  printOptionalField(col.name.toLowerCase)
+      else s"@${tableName}.${col.name.toLowerCase}"
     }).mkString(" ")
   }
 
