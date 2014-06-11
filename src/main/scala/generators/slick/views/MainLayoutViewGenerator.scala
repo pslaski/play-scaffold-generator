@@ -1,6 +1,6 @@
 package generators.slick.views
 
-import scala.slick.model.{Table, Model}
+import scala.slick.model.Model
 import generators.utils.{StringUtils, OutputHelpers}
 import generators.slick.utils.TableInfo
 

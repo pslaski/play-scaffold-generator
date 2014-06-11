@@ -2,7 +2,7 @@ package generators.slick.controllers
 
 import scala.slick.model.Column
 import scala.slick.model.Table
-import generators.slick.utils.{ForeignKeyInfo, TableInfo, DriverLoader, SlickGeneratorHelpers}
+import generators.slick.utils.{ForeignKeyInfo, TableInfo, SlickGeneratorHelpers}
 import generators.utils.{ModelProvider, Config, OutputHelpers}
 
 object ControllerGenerator {
