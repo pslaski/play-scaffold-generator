@@ -132,7 +132,7 @@ Form(
   }
 
   def printFormField(field : Column) = {
-    "\"" + field.name + "\"" + " -> " + typeCode(field)
+    "\"" + field.name.toLowerCase + "\"" + " -> " + typeCode(field)
   }
 
   def typeCode(field : Column) = {
