@@ -3,7 +3,7 @@ import generators.utils.Config
 import sbt._
 import Keys._
 import generators.slick.models.{DbConnectionGenerator, DaoObjectGenerator, TablesGenerator}
-import generators.slick.controllers.ControllerGenerator
+import generators.slick.controllers.{CustomFormattersGenerator, ControllerGenerator}
 
 object ScaffoldPlugin extends Plugin {
 
@@ -33,6 +33,10 @@ object ScaffoldPlugin extends Plugin {
     DaoObjectGenerator.generate(config, outputDir)
 
     stream.log.info("Generating Dao objects completed....")
+
+    CustomFormattersGenerator.writeToFile(outputDir, config.utilsPackage)
+
+    stream.log.info("Generating custom formatters completed....")
 
     ControllerGenerator.generate(config,outputDir)
 

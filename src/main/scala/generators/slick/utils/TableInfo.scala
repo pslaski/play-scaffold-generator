@@ -1,10 +1,9 @@
 package generators.slick.utils
 
 import scala.slick.model.{PrimaryKey, ForeignKey, Column, Table}
-import generators.utils.StringUtils
 import scala.slick.ast.ColumnOption.PrimaryKey
 
-class TableInfo(val table : Table) extends StringUtils{
+class TableInfo(val table : Table) extends SlickGeneratorHelpers{
 
   val columns : Seq[Column] = table.columns
 
@@ -35,10 +34,10 @@ class TableInfo(val table : Table) extends StringUtils{
   lazy val primaryKeyOpt = columns.find(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey))
 
   lazy val (primaryKeyName, primaryKeyType) = primaryKeyOpt match {
-        case Some(col) => (col.name.toLowerCase, col.tpe)
+        case Some(col) => (standardColumnName(col.name), col.tpe)
         case None => {
           val col = columns.head
-          (col.name.toLowerCase, col.tpe)
+          (standardColumnName(col.name), col.tpe)
         }
       }
 

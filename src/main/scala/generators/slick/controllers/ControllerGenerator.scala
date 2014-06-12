@@ -92,6 +92,7 @@ object ${objectName} extends Controller {
         importCode("play.api.data._"),
         importCode("play.api.data.Forms._"),
         importCode("play.api.data.format.Formats._"),
+        importCode("utils.CustomFormats._"),
         importCode(modelsPackage + "._"),
         importCode(modelsPackage + ".Tables._"))
         .mkString("\n")
@@ -136,7 +137,7 @@ Form(
   }
 
   def printFormField(field : Column) = {
-    "\"" + field.name.toLowerCase + "\"" + " -> " + typeCode(field)
+    "\"" + standardColumnName(field.name) + "\"" + " -> " + typeCode(field)
   }
 
   def typeCode(field : Column) = {

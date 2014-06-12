@@ -1,10 +1,9 @@
 package generators.slick.models
 
-import generators.utils.StringUtils
-import generators.slick.utils.TableInfo
+import generators.slick.utils.{SlickGeneratorHelpers, TableInfo}
 import scala.slick.model.ForeignKey
 
-trait DaoGeneratorHelpers extends StringUtils{
+trait DaoGeneratorHelpers extends SlickGeneratorHelpers{
 
   val rowName : String
 
@@ -94,11 +93,11 @@ for {
   def deleteJunctionMethodCode(foreignKeys : Seq[ForeignKey]) = {
 
     val idColumns = foreignKeys.map{ fk =>
-      fk.referencingColumns.map( col => col.name.toLowerCase + " : " + col.tpe)
+      fk.referencingColumns.map( col => standardColumnName(col.name) + " : " + col.tpe)
     }.flatten.mkString(", ")
 
     val findingColumns = foreignKeys.map{ fk =>
-      fk.referencingColumns.map(col => "row." + col.name.toLowerCase + " === " + col.name.toLowerCase)
+      fk.referencingColumns.map(col => "row." + standardColumnName(col.name) + " === " + standardColumnName(col.name))
     }.flatten.mkString(" && ")
 
     s"""
@@ -131,7 +130,7 @@ def update(updatedRow: ${tableRowName}) = {
 
     val joiningColumns = {
       "row => " + ((foreignKey.referencingColumns.map(_.name) zip foreignKey.referencedColumns.map(_.name)).map{
-        case (lcol,rcol) => "row."+lcol.toLowerCase + " === " + referencedRow + "." + rcol.toLowerCase
+        case (lcol,rcol) => "row." + standardColumnName(lcol) + " === " + referencedRow + "." + standardColumnName(rcol)
       }.mkString(" && "))
     }
 
@@ -182,7 +181,7 @@ def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
 
     val joiningColumns = {
       "row => " + ((foreignKey.referencedColumns.map(_.name) zip foreignKey.referencingColumns.map(_.name)).map{
-        case (lcol,rcol) => "row."+lcol.toLowerCase + " === " + junctionRow + "." + rcol.toLowerCase
+        case (lcol,rcol) => "row." + standardColumnName(lcol) + " === " + junctionRow + "." + standardColumnName(rcol)
       }.mkString(" && "))
     }
 

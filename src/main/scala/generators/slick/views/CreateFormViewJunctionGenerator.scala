@@ -44,15 +44,20 @@ class CreateFormViewJunctionGenerator(table : Table) extends ViewHelpers with Fo
 
   override def bodyCode: String = {
     s"""
-@if(!flash.isEmpty){
-    <div class="alert alert-success alert-dismissable">
-        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        @flash.get("success")
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Add new ${tableName}</h3>
     </div>
-}
-
-<h1>Add new ${tableName}</h1>
-  ${form}
+    @if(!flash.isEmpty){
+        <div class="alert alert-success alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            @flash.get("success")
+        </div>
+    }
+    <div class="panel-body">
+        ${form}
+    </div>
+</div>
 """.trim()
   }
 
@@ -67,10 +72,13 @@ class CreateFormViewJunctionGenerator(table : Table) extends ViewHelpers with Fo
 
   override def actions = {
     s"""
-<div class="actions">
-    <input type="submit" value="${submitButtonText}" class="btn primary"> or
-    <a href="/" class="btn">Cancel</a>
-</div>""".trim()
+<div class="form-group actions">
+    <div class="col-sm-10">
+        <button type="submit" class="btn btn-success">${submitButtonText}</button>
+        <a href="@routes.Application.index" class="btn btn-default">Cancel</a>
+    </div>
+</div>
+""".trim()
   }
 
 }

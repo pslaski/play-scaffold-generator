@@ -1,9 +1,9 @@
 package generators.slick.views
 
 import scala.slick.model.{Column, Table}
-import generators.slick.utils.{ForeignKeyInfo, TableInfo}
+import generators.slick.utils.{SlickGeneratorHelpers, ForeignKeyInfo, TableInfo}
 
-class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends ViewHelpers {
+class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends ViewHelpers with SlickGeneratorHelpers {
 
   val mainTableInfo = new TableInfo(table)
 
@@ -53,18 +53,18 @@ ${buttons}
       if(col.nullable) {
         if(isColumnForeignKey(col)){
           val parentTableInfo = new TableInfo(foreignKeyInfo.tablesByName(foreignKeys.find(_.referencingColumns.head.name.equals(col.name)).get.referencedTable))
-          printOptionalForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, col.name.toLowerCase)
+          printOptionalForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, standardColumnName(col.name))
         }
         else {
-          s"<p>${col.name} : ${printOptionalField(col.name.toLowerCase)}</p>"
+          s"<p>${col.name} : ${printOptionalField(standardColumnName(col.name))}</p>"
         }
       }
       else {
         if(isColumnForeignKey(col)) {
           val parentTableInfo = new TableInfo(foreignKeyInfo.tablesByName(foreignKeys.find(_.referencingColumns.head.name.equals(col.name)).get.referencedTable))
-          printForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, col.name.toLowerCase)
+          printForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, standardColumnName(col.name))
         }
-        else s"<p>${col.name} : @${tableName}.${col.name.toLowerCase}</p>"
+        else s"<p>${col.name} : @${tableName}.${standardColumnName(col.name)}</p>"
       }
     }).mkString("\n")
   }
@@ -136,9 +136,9 @@ ${buttons}
 
     val deleteArgs = junctionTableInfo.foreignKeys.map{ fk =>
       if(fk.referencedTable.table.equals(referencedTableInfo.table.name.table)) {
-        fk.referencedColumns.map(referencedTableInfo.name + "." + _.name.toLowerCase)
+        fk.referencedColumns.map(col => referencedTableInfo.name + "." + standardColumnName(col.name))
       }
-      else fk.referencedColumns.map(tableName + "." + _.name.toLowerCase)
+      else fk.referencedColumns.map(col => tableName + "." + standardColumnName(col.name))
     }.flatten.mkString(", ")
 
     s"""
@@ -157,7 +157,7 @@ ${buttons}
 
   def childRow(rowName : String, columns : Seq[Column]) = {
     columns.take(5).map{ col =>
-      s"@${rowName}.${col.name.toLowerCase}"
+      s"@${rowName}.${standardColumnName(col.name)}"
     }.mkString(" ")
   }
 

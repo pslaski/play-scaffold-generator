@@ -42,8 +42,14 @@ class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGe
 
   override def bodyCode: String = {
     s"""
-<h1>Add new ${tableName}</h1>
-  ${form}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Add new ${tableName}</h3>
+    </div>
+    <div class="panel-body">
+        ${form}
+    </div>
+</div>
 """.trim()
   }
 
