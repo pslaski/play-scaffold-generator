@@ -85,7 +85,7 @@ class ListViewGenerator(table : Table) extends ViewHelpers {
     s"""
 <div class="btn-group">
   <a href="@routes.${controllerName}.show(${tableName}.${primaryKeyName})" class="btn btn-success">Show</a>
-  <a href="@routes.${controllerName}.edit(${tableName}.${primaryKeyName})" class="btn btn-info">Edit</a>
+  <a href="@routes.${controllerName}.edit(${tableName}.${primaryKeyName})" class="btn btn-warning">Edit</a>
   <a href="@routes.${controllerName}.delete(${tableName}.${primaryKeyName})" class="btn btn-danger">Delete</a>
 </div>
 """.trim()

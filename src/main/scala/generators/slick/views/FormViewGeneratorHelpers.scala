@@ -44,7 +44,8 @@ ${actions}
       inputPrimaryKeyCode(column.name.toLowerCase)
     }
     else if(foreignKeys.exists(_._1.equals(column.name))){
-      selectCode(column.name.toLowerCase, foreignKeys.find(_._1.equals(column.name)).get._2)
+      if(column.nullable) selectOptionalCode(column.name.toLowerCase, foreignKeys.find(_._1.equals(column.name)).get._2)
+      else selectCode(column.name.toLowerCase, foreignKeys.find(_._1.equals(column.name)).get._2)
     }
     else {
       convertTypeToInput(column)
@@ -89,6 +90,10 @@ ${actions}
 
   def selectCode(fieldName : String, optionsName : String) = {
     s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}")"""
+  }
+
+  def selectOptionalCode(fieldName : String, optionsName : String) = {
+    s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}", '_default -> "--${fieldName}--")"""
   }
 
   def actions = {
