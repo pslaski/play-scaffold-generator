@@ -40,8 +40,14 @@ class EditFormViewGenerator(table : Table) extends ViewHelpers with FormViewGene
 
   override def bodyCode: String = {
     s"""
-<h1>Edit ${tableName}</h1>
-  ${form}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Edit ${tableName}</h3>
+    </div>
+    <div class="panel-body">
+        ${form}
+    </div>
+</div>
 """.trim()
   }
 
