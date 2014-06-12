@@ -66,7 +66,7 @@ class MainLayoutViewGenerator(model : Model, appName : String) extends OutputHel
 	            <span class="icon-bar"></span>
 	            <span class="icon-bar"></span>
 	          </button>
-	          <a class="navbar-brand" href="#">${appName}</a>
+	          <a class="navbar-brand" href="@routes.Application.index">${appName}</a>
 	        </div>
 	        ${menu}
 	      </div>
