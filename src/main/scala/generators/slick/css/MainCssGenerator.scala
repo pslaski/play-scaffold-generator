@@ -16,6 +16,20 @@ div.content-wrapper {
 .panel-heading > .btn-group {
     top: -18px;
 }
+
+.form-group > .error span.help-inline {
+    background-color: #f2dede;
+    color: #a94442;
+    padding: 5px 10px 5px 10px;
+    border: 1px solid #ebccd1;
+    border-radius: 4px;
+    margin: 7px 0 7px 0;
+    display: inline-block;
+}
+
+.table-middle td {
+    vertical-align: middle !important;
+}
      """.trim
   }
 

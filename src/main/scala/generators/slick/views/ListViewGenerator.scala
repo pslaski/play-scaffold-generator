@@ -1,9 +1,9 @@
 package generators.slick.views
 
 import scala.slick.model.{Table, Column}
-import generators.slick.utils.TableInfo
+import generators.slick.utils.{SlickGeneratorHelpers, TableInfo}
 
-class ListViewGenerator(table : Table) extends ViewHelpers {
+class ListViewGenerator(table : Table) extends ViewHelpers with SlickGeneratorHelpers{
 
   val tableInfo = new TableInfo(table)
 
@@ -37,7 +37,7 @@ class ListViewGenerator(table : Table) extends ViewHelpers {
         </div>
     </div>
     <div class="panel-body">
-        <table class="table table-hover table-bordered table-responsive">
+        <table class="table table-hover table-bordered table-responsive table-middle">
             <thead>
                 ${headers}
             </thead>
@@ -63,8 +63,8 @@ class ListViewGenerator(table : Table) extends ViewHelpers {
 
   def rows = {
     (columns.take(fieldsAmount) map { col =>
-      if(col.nullable)  printOptionalField(col.name.toLowerCase)
-      else printField(col.name.toLowerCase)
+      if(col.nullable)  printOptionalField(standardColumnName(col.name))
+      else printField(standardColumnName(col.name))
     }).mkString("\n")
   }
 
