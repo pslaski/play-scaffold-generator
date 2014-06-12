@@ -15,6 +15,7 @@ object ViewGenerator {
     val foreignKeyInfo = new ForeignKeyInfo(model)
 
     new MainLayoutViewGenerator(model, config.applicationName).writeToFile(outputFolder, pkg)
+    new IndexViewGenerator(config.applicationName).writeToFile(outputFolder, pkg)
 
     MainCssGenerator.writeToFile("public", "stylesheets")
 

@@ -20,7 +20,7 @@ object DbConnection {
     """.trim()
   }
   
-  def indent(code: String): String = code//code.split("\n").mkString("\n"+"  ")
+  def indent(code: String): String = code
   
   override def writeToFile(folder:String, pkg: String, fileName: String="DbConnection.scala"){
     super.writeToFile(folder, pkg, fileName)

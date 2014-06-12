@@ -1,23 +1,52 @@
 package generators.slick.controllers
 
 import generators.utils.OutputHelpers
-import scala.slick.model.Table
+import scala.slick.model.{Model, Table}
 import generators.slick.utils.{ForeignKeyInfo, TableInfo}
 
-class RouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers {
+class RouteGenerator(model : Model, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers {
+
+  override def code: String = {
+s"""
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           controllers.Application.index
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+${routes}
+ """.trim
+  }
+
+  override def indent(code: String): String = code
+
+  override def writeToFile(folder:String = "conf", pkg: String = "", fileName: String="routes") {
+    writeStringToFile(indent(code), folder, pkg, fileName)
+  }
+
+  val routes = {
+    model.tables.map{ table =>
+      new TableRouteGenerator(table, foreignKeyInfo).routes
+    }.mkString("\n\n")
+  }
+}
+
+class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) {
 
   val tableInfo = new TableInfo(table)
 
-  override def code: String = {
-    if(tableInfo.isJunctionTable) {
-      routesForJunctionTable.mkString("\n")
+  def routes = {
+      if(tableInfo.isJunctionTable) {
+        routesForJunctionTable.mkString("\n")
+      }
+      else {
+        routesForSimpleTable.mkString("\n")
+      }
     }
-    else {
-      routesForSimpleTable.mkString("\n")
-    }
-  }
-
-  override def indent(code: String): String = "\n" + code + "\n"
 
   lazy val routesForSimpleTable = {
     val deleteJunctionsRoutes = foreignKeyInfo.parentChildrenTablesInfo(table.name).filter(_.isJunctionTable).map(deleteJunctionRoute(_))

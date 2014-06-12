@@ -16,6 +16,10 @@ object ControllerGenerator {
 
     val foreignKeyInfo = new ForeignKeyInfo(model)
 
+    new RouteGenerator(model, foreignKeyInfo).writeToFile()
+
+    ApplicationControllerGenerator.writeToFile(outputFolder, controllersPackage)
+
     model.tables map { table =>
       new ControllerGenerator(table, modelsPackage, foreignKeyInfo).writeToFile(outputFolder, controllersPackage)
     }
@@ -162,9 +166,7 @@ Form(
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= controllerName +  ".scala") {
-      val routeGenerator = new RouteGenerator(table, foreignKeyInfo)
-      routeGenerator.appendToFile("conf", "routes")
-      writeStringToFile(packageCode(pkg), folder, pkg, fileName)
+      super.writeToFile(folder, pkg, fileName)
     }
 
 }
