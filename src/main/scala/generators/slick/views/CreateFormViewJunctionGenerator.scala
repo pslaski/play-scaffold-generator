@@ -58,7 +58,7 @@ class CreateFormViewJunctionGenerator(table : Table) extends ViewHelpers with Fo
 
   override def formField(column : Column) = {
     if(foreignKeys.exists(_._1.equals(column.name))){
-      selectCode(column.name, foreignKeys.find(_._1.equals(column.name)).get._2)
+      selectCode(column.name.toLowerCase, foreignKeys.find(_._1.equals(column.name)).get._2)
     }
     else {
       convertTypeToInput(column)
