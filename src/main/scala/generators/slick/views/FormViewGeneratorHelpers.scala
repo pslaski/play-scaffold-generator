@@ -1,8 +1,10 @@
 package generators.slick.views
 
+import generators.slick.utils.SlickGeneratorHelpers
+
 import scala.slick.model.Column
 
-trait FormViewGeneratorHelpers{
+trait FormViewGeneratorHelpers extends SlickGeneratorHelpers{
 
   val columns : Seq[Column]
 
@@ -22,13 +24,9 @@ trait FormViewGeneratorHelpers{
 
   def form = {
     s"""
-  @form(routes.${controllerName}.${formAction}) {
-
-  <fieldset>
+  @form(routes.${controllerName}.${formAction}, 'role -> "form", 'class -> "col-sm-offset-2 col-sm-8") {
 
   ${formFields}
-
-  </fieldset>
 
 ${actions}
 
@@ -36,7 +34,15 @@ ${actions}
   }
 
   def formFields : String = {
-    (columns map formField).mkString("\n")
+    (columns map (col => packedField(formField(col)))).mkString("\n")
+  }
+
+  def packedField(field : String) = {
+    s"""
+<div class="form-group">
+  ${field}
+</div>
+     """.trim
   }
 
   def formField(column : Column) = {
@@ -44,8 +50,8 @@ ${actions}
       inputPrimaryKeyCode(column.name.toLowerCase)
     }
     else if(foreignKeys.exists(_._1.equals(column.name))){
-      if(column.nullable) selectOptionalCode(column.name.toLowerCase, foreignKeys.find(_._1.equals(column.name)).get._2)
-      else selectCode(column.name.toLowerCase, foreignKeys.find(_._1.equals(column.name)).get._2)
+      if(column.nullable) selectOptionalCode(standardColumnName(column.name), foreignKeys.find(_._1.equals(column.name)).get._2)
+      else selectCode(standardColumnName(column.name), foreignKeys.find(_._1.equals(column.name)).get._2)
     }
     else {
       convertTypeToInput(column)
@@ -53,20 +59,20 @@ ${actions}
   }
 
   def convertTypeToInput(column : Column) = {
-    val (name, tpe) = (column.name.toLowerCase, column.tpe)
+    val (name, tpe) = (standardColumnName(column.name), column.tpe)
     tpe match {
       case "java.sql.Date" => inputDateCode(name)
       case "Boolean" => checkboxCode(name)
       case "java.sql.Blob" => inputFileCode(name)
-      case "java.sql.Time" => inputDateCode(name)
-      case "java.sql.Timestamp" => inputDateCode(name)
+      case "java.sql.Time" => inputTimeCode(name)
+      case "java.sql.Timestamp" => inputDateTimeCode(name)
       case "java.sql.Clob" => inputFileCode(name)
       case _ => inputTextCode(name)
     }
   }
 
   def inputTextCode(fieldName : String) = {
-    s"""@inputText(${formName}("${fieldName}"), '_label -> "${fieldName}")"""
+    s"""@inputText(${formName}("${fieldName}"), '_label -> "${fieldName}", 'class -> "form-control")"""
   }
 
   def inputPrimaryKeyCode(fieldName : String) = {
@@ -77,30 +83,47 @@ ${actions}
     }
 
   def inputDateCode(fieldName : String) = {
-    s"""@inputDate(${formName}("${fieldName}"), '_label -> "${fieldName}")"""
+    s"""@inputDate(${formName}("${fieldName}"), '_label -> "${fieldName}", 'class -> "form-control")"""
+  }
+
+  def inputTimeCode(fieldName : String) = {
+    s"""
+@input(${formName}("${fieldName}"), '_label -> "${fieldName}", 'class -> "form-control") { (id, name, value, args) =>
+    <input type="time" name="@name" id="@id" value="@value" @toHtmlArgs(args)>
+}""".trim()
+  }
+
+  def inputDateTimeCode(fieldName : String) = {
+    s"""
+@input(${formName}("${fieldName}"), '_label -> "${fieldName}", 'class -> "form-control") { (id, name, value, args) =>
+    <input type="datetime" name="@name" id="@id" value="@value" @toHtmlArgs(args)>
+}""".trim()
   }
 
   def inputFileCode(fieldName : String) = {
-    s"""@inputFile(${formName}("${fieldName}"), '_label -> "${fieldName}")"""
+    s"""@inputFile(${formName}("${fieldName}"), '_label -> "${fieldName}", 'class -> "form-control")"""
   }
 
   def checkboxCode(fieldName : String) = {
-    s"""@checkbox(${formName}("${fieldName}"), '_label -> "${fieldName}")"""
+    s"""@checkbox(${formName}("${fieldName}"), '_label -> "${fieldName}", 'class -> "form-control")"""
   }
 
   def selectCode(fieldName : String, optionsName : String) = {
-    s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}")"""
+    s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}", 'class -> "form-control")"""
   }
 
   def selectOptionalCode(fieldName : String, optionsName : String) = {
-    s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}", '_default -> "--${fieldName}--")"""
+    s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}", '_default -> "--${fieldName}--", 'class -> "form-control")"""
   }
 
   def actions = {
     s"""
-<div class="actions">
-    <input type="submit" value="${submitButtonText}" class="btn primary"> or
-    <a href="@routes.${controllerName}.list" class="btn">Cancel</a>
-</div>""".trim()
+<div class="form-group actions">
+    <div class="col-sm-10">
+        <button type="submit" class="btn btn-success">${submitButtonText}</button>
+        <a href="@routes.${controllerName}.list" class="btn btn-default">Cancel</a>
+    </div>
+</div>
+""".trim()
   }
 }
