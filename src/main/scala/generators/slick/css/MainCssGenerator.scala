@@ -30,6 +30,15 @@ div.content-wrapper {
 .table-middle td {
     vertical-align: middle !important;
 }
+
+.show-details {
+    margin-top: 7px;
+}
+
+.show-group {
+    min-height: 22px;
+    background-color: #f5f5f5;
+}
      """.trim
   }
 

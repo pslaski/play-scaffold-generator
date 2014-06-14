@@ -58,7 +58,7 @@ class ListViewGenerator(table : Table) extends ViewHelpers with SlickGeneratorHe
   }
 
   def headers = {
-    (columns.take(fieldsAmount).map("<th>" + _.name + "</th>") :+ "<th>Actions</th>").mkString("\n")
+    (columns.take(fieldsAmount).map("<th>" + _.name + "</th>") :+ "<th class=\"text-center\">Actions</th>").mkString("\n")
   }
 
   def rows = {
