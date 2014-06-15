@@ -2,8 +2,8 @@ package generators.slick.controllers
 
 import scala.slick.model.Column
 import scala.slick.model.Table
-import generators.slick.utils.{ForeignKeyInfo, TableInfo, SlickGeneratorHelpers}
-import generators.utils.{ModelProvider, Config, OutputHelpers}
+import generators.slick.utils.{ForeignKeyInfo, TableInfo}
+import generators.utils.{GeneratorHelpers, ModelProvider, Config, OutputHelpers}
 
 object ControllerGenerator {
   def generate(config : Config, outputFolder : String) = {
@@ -26,7 +26,7 @@ object ControllerGenerator {
   }
 }
 
-class ControllerGenerator(table : Table, modelsPackage : String, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with ControllerGeneratorHelpers with SlickGeneratorHelpers {
+class ControllerGenerator(table : Table, modelsPackage : String, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with ControllerGeneratorHelpers with GeneratorHelpers {
 
   val mainTableInfo = new TableInfo(table)
 
@@ -151,7 +151,7 @@ Form(
       case "String" => "text"
       case "Int" => "number"
       case "Long" => "longNumber"
-      case "BigDecimal" => "bigDecimal"
+      case "scala.math.BigDecimal" => "bigDecimal"
       case "java.sql.Date" => "sqlDate"
       case "Boolean" => "boolean"
       case "Byte" => "of[Byte]"   // need formatter

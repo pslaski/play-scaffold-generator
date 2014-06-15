@@ -1,10 +1,10 @@
 package generators.slick.views
 
-import generators.slick.utils.SlickGeneratorHelpers
+import generators.utils.GeneratorHelpers
 
 import scala.slick.model.Column
 
-trait FormViewGeneratorHelpers extends SlickGeneratorHelpers{
+trait FormViewGeneratorHelpers extends GeneratorHelpers{
 
   val columns : Seq[Column]
 
@@ -46,8 +46,8 @@ ${actions}
   }
 
   def formField(column : Column) = {
-    if(column.name.toLowerCase.equals(primaryKeyName)){
-      inputPrimaryKeyCode(column.name.toLowerCase)
+    if(standardColumnName(column.name).equals(primaryKeyName)){
+      inputPrimaryKeyCode(standardColumnName(column.name))
     }
     else if(foreignKeys.exists(_._1.equals(column.name))){
       if(column.nullable) selectOptionalCode(standardColumnName(column.name), foreignKeys.find(_._1.equals(column.name)).get._2)

@@ -1,8 +1,8 @@
 package generators.slick.models
 
 import scala.slick.model.{ForeignKeyAction, Table}
-import generators.slick.utils.{ForeignKeyInfo, TableInfo, SlickGeneratorHelpers}
-import generators.utils.{ModelProvider, Config, OutputHelpers}
+import generators.slick.utils.{ForeignKeyInfo, TableInfo}
+import generators.utils.{GeneratorHelpers, ModelProvider, Config, OutputHelpers}
 
 object DaoObjectGenerator {
   def generate(config : Config, outputFolder : String) = {
@@ -19,7 +19,7 @@ object DaoObjectGenerator {
   }
 }
 
-class DaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with DaoGeneratorHelpers with SlickGeneratorHelpers {
+class DaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with DaoGeneratorHelpers with GeneratorHelpers {
 
   val mainTableInfo = new TableInfo(table)
 

@@ -1,9 +1,11 @@
 package generators.slick.utils
 
+import generators.utils.GeneratorHelpers
+
 import scala.slick.model.{PrimaryKey, ForeignKey, Column, Table}
 import scala.slick.ast.ColumnOption.PrimaryKey
 
-class TableInfo(val table : Table) extends SlickGeneratorHelpers{
+class TableInfo(val table : Table) extends GeneratorHelpers{
 
   val columns : Seq[Column] = table.columns
 
@@ -11,11 +13,11 @@ class TableInfo(val table : Table) extends SlickGeneratorHelpers{
 
   val name : String = table.name.table
 
-  val listName : String = name + "s"
-
   val nameCamelCased : String = name.toCamelCase
 
   val nameCamelCasedUncapitalized : String = nameCamelCased.uncapitalize
+
+  val listName : String = nameCamelCasedUncapitalized + "s"
 
   val daoObjectName : String = nameCamelCased + "Dao"
 

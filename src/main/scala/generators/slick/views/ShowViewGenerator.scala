@@ -1,9 +1,11 @@
 package generators.slick.views
 
-import scala.slick.model.{Column, Table}
-import generators.slick.utils.{SlickGeneratorHelpers, ForeignKeyInfo, TableInfo}
+import generators.utils.GeneratorHelpers
 
-class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends ViewHelpers with SlickGeneratorHelpers {
+import scala.slick.model.{Column, Table}
+import generators.slick.utils.{ForeignKeyInfo, TableInfo}
+
+class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends ViewHelpers with GeneratorHelpers {
 
   val mainTableInfo = new TableInfo(table)
 

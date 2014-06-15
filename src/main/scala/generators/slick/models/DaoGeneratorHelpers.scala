@@ -1,9 +1,10 @@
 package generators.slick.models
 
-import generators.slick.utils.{SlickGeneratorHelpers, TableInfo}
+import generators.slick.utils.TableInfo
+import generators.utils.GeneratorHelpers
 import scala.slick.model.ForeignKey
 
-trait DaoGeneratorHelpers extends SlickGeneratorHelpers{
+trait DaoGeneratorHelpers extends GeneratorHelpers{
 
   val rowName : String
 

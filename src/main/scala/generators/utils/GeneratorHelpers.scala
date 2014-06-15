@@ -1,8 +1,6 @@
-package generators.slick.utils
+package generators.utils
 
-import generators.utils.StringUtils
-
-trait SlickGeneratorHelpers extends StringUtils {
+trait GeneratorHelpers extends StringUtils {
 
   def importCode(importPath : String) = "import " + importPath;
 
