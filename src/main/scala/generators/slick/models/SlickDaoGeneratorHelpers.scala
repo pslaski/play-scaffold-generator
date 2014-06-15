@@ -4,7 +4,7 @@ import generators.slick.utils.TableInfo
 import generators.utils.GeneratorHelpers
 import scala.slick.model.ForeignKey
 
-trait DaoGeneratorHelpers extends GeneratorHelpers{
+trait SlickDaoGeneratorHelpers extends GeneratorHelpers{
 
   val rowName : String
 

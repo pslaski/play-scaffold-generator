@@ -4,7 +4,7 @@ import scala.slick.model.{ForeignKeyAction, Table}
 import generators.slick.utils.{ForeignKeyInfo, TableInfo}
 import generators.utils.{GeneratorHelpers, ModelProvider, Config, OutputHelpers}
 
-object DaoObjectGenerator {
+object SlickDaoObjectGenerator {
   def generate(config : Config, outputFolder : String) = {
 
     val pkg = config.modelsPackage
@@ -14,12 +14,12 @@ object DaoObjectGenerator {
     val foreignKeyInfo = new ForeignKeyInfo(model)
 
     model.tables map { table =>
-      new DaoObjectGenerator(table, foreignKeyInfo).writeToFile(outputFolder, pkg)
+      new SlickDaoObjectGenerator(table, foreignKeyInfo).writeToFile(outputFolder, pkg)
     }
   }
 }
 
-class DaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with DaoGeneratorHelpers with GeneratorHelpers {
+class SlickDaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with SlickDaoGeneratorHelpers with GeneratorHelpers {
 
   val mainTableInfo = new TableInfo(table)
 

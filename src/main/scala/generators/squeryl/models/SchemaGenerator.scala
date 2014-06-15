@@ -130,6 +130,7 @@ object ${objectName} extends Schema {
 
     s"""
   case class ${tableInfo.tableRowName}(${printJunctionClassColumns(tableInfo)}) extends KeyedEntity[CompositeKey2[${fkTypes}]] {
+
     override def id = compositeKey(${fkColumns})
 
     ${printConstructor(tableInfo)}
@@ -160,7 +161,7 @@ object ${objectName} extends Schema {
       case "Long" => "0l"
       case "scala.math.BigDecimal" => "scala.math.BigDecimal(0)"
       case "java.sql.Date" => "new java.sql.Date(0)"
-      case "Boolean" => "new Boolean()"
+      case "Boolean" => "false"
       case "Byte" => "0" // not supported
       case "Short" => "0" // not supported
       case "Float" => "0"

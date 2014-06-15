@@ -1,9 +1,9 @@
 import generators.slick.views.ViewGenerator
-import generators.squeryl.models.SchemaGenerator
+import generators.squeryl.models.{SquerylDaoObjectGenerator, SchemaGenerator}
 import generators.utils.Config
 import sbt._
 import Keys._
-import generators.slick.models.{DbConnectionGenerator, DaoObjectGenerator, TablesGenerator}
+import generators.slick.models.{DbConnectionGenerator, SlickDaoObjectGenerator, TablesGenerator}
 import generators.slick.controllers.{CustomFormattersGenerator, ControllerGenerator}
 
 object ScaffoldPlugin extends Plugin {
@@ -32,7 +32,7 @@ object ScaffoldPlugin extends Plugin {
 
     stream.log.info("Generating DBconnection helper completed....")
 
-    DaoObjectGenerator.generate(config, outputDir)
+    SlickDaoObjectGenerator.generate(config, outputDir)
 
     stream.log.info("Generating Dao objects completed....")
 
@@ -68,7 +68,7 @@ object ScaffoldPlugin extends Plugin {
 
     stream.log.info("Generating schema completed....")
 
-    //DaoObjectGenerator.generate(config, outputDir)
+    SquerylDaoObjectGenerator.generate(config, outputDir)
 
     stream.log.info("Generating Dao objects completed....")
 
