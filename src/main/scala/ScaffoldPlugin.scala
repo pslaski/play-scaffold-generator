@@ -1,10 +1,10 @@
-import generators.slick.views.ViewGenerator
-import generators.squeryl.models.{SquerylDaoObjectGenerator, SchemaGenerator}
+import generators.models.slick.{TablesGenerator, SlickDaoObjectGenerator, DbConnectionGenerator}
+import generators.models.squeryl.{SquerylDaoObjectGenerator, SchemaGenerator}
+import generators.views.ViewGenerator
 import generators.utils.Config
 import sbt._
 import Keys._
-import generators.slick.models.{DbConnectionGenerator, SlickDaoObjectGenerator, TablesGenerator}
-import generators.slick.controllers.{CustomFormattersGenerator, ControllerGenerator}
+import generators.controllers.{CustomFormattersGenerator, ControllerGenerator}
 
 object ScaffoldPlugin extends Plugin {
 

@@ -1,7 +1,5 @@
 package generators.utils
 
-import generators.slick.utils.DriverLoader
-
 class ModelProvider(config : Config) {
 
   private val jdbcDriver = config.jdbcDriver
