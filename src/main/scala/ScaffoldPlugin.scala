@@ -11,11 +11,10 @@ object ScaffoldPlugin extends Plugin {
   override lazy val settings = Seq(slick <<= slickCodeGenTask,
                                    squeryl <<= squerylCodeGenTask)
 
-  
 	// slick code generation task
   lazy val slick = TaskKey[Seq[File]]("scaffold-slick")
   lazy val slickCodeGenTask = (baseDirectory in Compile, name, streams) map { (baseDir, appName, stream) =>
-    
+
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
     
     val config = new Config(configFile, appName)

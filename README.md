@@ -1,4 +1,4 @@
-model-generator
+scaffold-generator
 =================
 
-SBT plugin used to generate model for Play Framework
+SBT plugin used to generate CRUD for Play Framework 2.2.x
