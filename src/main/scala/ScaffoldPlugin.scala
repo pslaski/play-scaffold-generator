@@ -1,5 +1,5 @@
 import generators.models.slick.{TablesGenerator, SlickDaoObjectGenerator, DbConnectionGenerator}
-import generators.models.squeryl.{SquerylDaoObjectGenerator, SchemaGenerator}
+import generators.models.squeryl.{GlobalObjectGenerator, SquerylDaoObjectGenerator, SchemaGenerator}
 import generators.views.ViewGenerator
 import generators.utils.Config
 import sbt._
@@ -63,6 +63,10 @@ object ScaffoldPlugin extends Plugin {
     val outputDir = (baseDir / "app").getPath
 
     stream.log.info("Start scaffold....")
+
+    new GlobalObjectGenerator(config).writeToFile(outputDir, "")
+
+    stream.log.info("Generating schema completed....")
 
     SchemaGenerator.generate(config, outputDir)
 
