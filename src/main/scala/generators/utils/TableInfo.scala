@@ -38,6 +38,51 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
 
   val viewsPackage = name.toLowerCase
 
-  val isJunctionTable = !columns.exists(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey)) && foreignKeys.length >= 2
+  val tableConfig = TablesConfigParser.getTableConfigForName(name)
+
+  lazy val listColumns : Seq[Column] = getListColumns
+
+  private def getListColumns : Seq[Column] = {
+
+    val listCols : Option[Seq[Column]] = tableConfig.map( cfg => cfg.listColumns.map(mapColumnNamesToColumns(_))).flatten
+
+    listCols match {
+      case Some(cols) => cols
+      case None => columns.take(5)
+    }
+  }
+
+  lazy val selectColumns : Seq[Column] = getSelectColumns
+
+  private def getSelectColumns : Seq[Column] = {
+
+    val selectCols : Option[Seq[Column]] = tableConfig.map( cfg => cfg.selectColumns.map(mapColumnNamesToColumns(_))).flatten
+
+    selectCols match {
+      case Some(cols) => cols
+      case None => columns.take(5)
+    }
+  }
+
+  private def mapColumnNamesToColumns(names : List[String]) : Seq[Column] = {
+    val filteredColumns = names.map{ colName =>
+      columns.find(_.name == colName)
+    }.filter(_.isDefined).map(_.get)
+
+    filteredColumns
+  }
+
+  val isJunctionTable = getIsJunctionTable
+
+  private def getIsJunctionTable : Boolean = {
+    val isJunctionFromConfig : Option[Boolean] = tableConfig.map( cfg => cfg.isJunctionTable.map(_)).flatten
+
+    isJunctionFromConfig match {
+      case Some(isJunction) => isJunction
+      case None => defaultIsJunctionTableCheck
+    }
+  }
+
+  private def defaultIsJunctionTableCheck : Boolean = !columns.exists(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey)) && foreignKeys.length >= 2
 
 }

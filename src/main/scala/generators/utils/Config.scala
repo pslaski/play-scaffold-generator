@@ -1,38 +1,27 @@
 package generators.utils
 
 import java.io.File
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigException
 
-class Config(configFile : File, appName : String) {
+class Config(configFile : File, appName : String) extends ConfigUtils{
 	
-	private val config = ConfigFactory.parseFile(configFile)
+	private val config = parseFile(configFile)
 
   val applicationName = appName
   
-	val jdbcDriver = getStringOrDefault("db.default.driver","org.h2.Driver")
+	val jdbcDriver = getStringOrDefault("db.default.driver", config, "org.h2.Driver")
 	
-	val url = getStringOrDefault("db.default.url","jdbc:h2:mem:play")
+	val url = getStringOrDefault("db.default.url", config, "jdbc:h2:mem:play")
 	
-	val user = getStringOrDefault("db.default.user","")
+	val user = getStringOrDefault("db.default.user", config)
 	
-	val password = getStringOrDefault("db.default.password","")
+	val password = getStringOrDefault("db.default.password", config)
 	
-	val modelsPackage = getStringOrDefault("generator.default.modelsDir","models")
+	val modelsPackage = getStringOrDefault("generator.default.modelsDir", config, "models")
 
-  val controllersPackage = getStringOrDefault("generator.default.controllersDir","controllers")
+  val controllersPackage = getStringOrDefault("generator.default.controllersDir", config, "controllers")
 
-  val viewsPackage = getStringOrDefault("generator.default.viewsDir","views")
+  val viewsPackage = getStringOrDefault("generator.default.viewsDir", config, "views")
 	  
-	val utilsPackage = getStringOrDefault("generator.default.utilsDir","utils")
+	val utilsPackage = getStringOrDefault("generator.default.utilsDir", config, "utils")
 
-	
-	def getStringOrDefault(key : String, default : String) : String = {
-	  try{
-	    config.getString(key)
-	  }
-	  catch {
-	    case missing : ConfigException.Missing => default
-	  }
-	}
 }
