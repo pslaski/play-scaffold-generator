@@ -22,8 +22,6 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
 
   val primaryKeyName = mainTableInfo.primaryKeyName
 
-  val fieldsAmount = 5
-
   val childsTables : Seq[TableInfo] = foreignKeyInfo.foreignKeysReferencedTables(table.name).map{ fk =>
     val childTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
     if(childTableInfo.isJunctionTable) {
@@ -153,12 +151,12 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
     <div class="panel-body">
         <table class="table table-hover table-bordered table-responsive table-middle">
             <thead>
-            ${headers(tableInfo.columns)}
+            ${headers(tableInfo.listColumns)}
             </thead>
             <tbody>
             @for(${tableInfo.name} <- ${tableInfo.listName}) {
             <tr>
-                ${childFields(tableInfo.name, tableInfo.columns)}
+                ${childFields(tableInfo.name, tableInfo.listColumns)}
                 <td class="text-center">
                     <a href="@routes.${tableInfo.controllerName}.show(${tableInfo.name}.${tableInfo.primaryKeyName})" class="btn btn-info btn-sm">Show</a>
                 </td>
@@ -189,12 +187,12 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
     <div class="panel-body">
         <table class="table table-hover table-bordered table-responsive table-middle">
             <thead>
-            ${headers(referencedTableInfo.columns)}
+            ${headers(referencedTableInfo.listColumns)}
             </thead>
             <tbody>
             @for(${referencedTableInfo.name} <- ${referencedTableInfo.listName}) {
             <tr>
-                ${childFields(referencedTableInfo.name, referencedTableInfo.columns)}
+                ${childFields(referencedTableInfo.name, referencedTableInfo.listColumns)}
                 <td class="text-center">
                     <a href="@routes.${referencedTableInfo.controllerName}.show(${referencedTableInfo.name}.${referencedTableInfo.primaryKeyName})" class="btn btn-info btn-sm">Show</a>
                     <a href="@routes.${controllerName}.delete${junctionTableInfo.nameCamelCased}(${deleteArgs})" class="btn btn-danger btn-sm">Delete</a>
@@ -210,11 +208,11 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
   }
 
   def headers(columns : Seq[Column]) = {
-    (columns.take(fieldsAmount).map("<th>" + _.name + "</th>") :+ "<th class=\"text-center\">Actions</th>").mkString("\n")
+    (columns.map("<th>" + _.name + "</th>") :+ "<th class=\"text-center\">Actions</th>").mkString("\n")
   }
 
   def childFields(rowName : String, columns : Seq[Column]) = {
-    (columns.take(fieldsAmount) map { col =>
+    (columns map { col =>
       if(col.nullable)  printOptionalListingField(rowName,standardColumnName(col.name))
       else printStandardListingField(rowName, standardColumnName(col.name))
     }).mkString("\n")

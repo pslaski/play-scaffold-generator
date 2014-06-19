@@ -35,7 +35,7 @@ class SquerylDaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) 
 
   val objectName = mainTableInfo.daoObjectName
 
-  override val fieldsForSimpleName = mainTableInfo.columns.take(5).map{ col =>
+  override val fieldsForSimpleName = mainTableInfo.selectColumns.map{ col =>
     if(standardColumnName(col.name).equals(primaryKeyName)) "id"
     else if(col.nullable) standardColumnName(col.name) + ".getOrElse(\"\")"
     else standardColumnName(col.name)

@@ -8,7 +8,7 @@ class ListViewGenerator(table : Table) extends ViewHelpers with GeneratorHelpers
 
   val tableInfo = new TableInfo(table)
 
-  val columns: Seq[Column] = tableInfo.columns
+  val columns: Seq[Column] = tableInfo.listColumns
 
   val tableName = tableInfo.name
 
@@ -21,8 +21,6 @@ class ListViewGenerator(table : Table) extends ViewHelpers with GeneratorHelpers
   val controllerName = tableInfo.controllerName
 
   val primaryKeyName = tableInfo.primaryKeyName
-
-  val fieldsAmount = 5
 
   override val arguments = Seq((listName, "List[Tables." + tableRowName + "]"))
 
@@ -59,11 +57,11 @@ class ListViewGenerator(table : Table) extends ViewHelpers with GeneratorHelpers
   }
 
   def headers = {
-    (columns.take(fieldsAmount).map("<th>" + _.name + "</th>") :+ "<th class=\"text-center\">Actions</th>").mkString("\n")
+    (columns.map("<th>" + _.name + "</th>") :+ "<th class=\"text-center\">Actions</th>").mkString("\n")
   }
 
   def rows = {
-    (columns.take(fieldsAmount) map { col =>
+    (columns map { col =>
       if(col.nullable)  printOptionalField(standardColumnName(col.name))
       else printField(standardColumnName(col.name))
     }).mkString("\n")

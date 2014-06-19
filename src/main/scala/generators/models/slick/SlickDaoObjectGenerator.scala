@@ -35,9 +35,11 @@ class SlickDaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) ex
 
   val objectName = mainTableInfo.daoObjectName
 
-  override val fieldsForSimpleName = mainTableInfo.columns.take(5).map{ col =>
-    if(col.nullable) standardColumnName(col.name) + ".getOrElse(\"\")"
-    else standardColumnName(col.name)
+  override val fieldsForSimpleName = {
+    mainTableInfo.selectColumns.map{ col =>
+      if(col.nullable) standardColumnName(col.name) + ".getOrElse(\"\")"
+      else standardColumnName(col.name)
+    }
   }
 
   override def code: String = objectCode

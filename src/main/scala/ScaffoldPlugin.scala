@@ -1,7 +1,7 @@
 import generators.models.slick.{TablesGenerator, SlickDaoObjectGenerator, DbConnectionGenerator}
 import generators.models.squeryl.{GlobalObjectGenerator, SquerylDaoObjectGenerator, SchemaGenerator}
 import generators.views.ViewGenerator
-import generators.utils.Config
+import generators.utils.{TablesConfigParser, Config}
 import sbt._
 import Keys._
 import generators.controllers.{CustomFormattersGenerator, ControllerGenerator}
@@ -18,6 +18,10 @@ object ScaffoldPlugin extends Plugin {
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
     
     val config = new Config(configFile, appName)
+
+    val scaffoldConfig = (baseDir / "/conf/scaffold-config.conf").getAbsoluteFile
+
+    TablesConfigParser.parse(scaffoldConfig)
 	
     val outputDir = (baseDir / "app").getPath
 
@@ -58,6 +62,10 @@ object ScaffoldPlugin extends Plugin {
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
 
     val config = new Config(configFile, appName)
+
+    val scaffoldConfig = (baseDir / "/conf/scaffold-config.conf").getAbsoluteFile
+
+    TablesConfigParser.parse(scaffoldConfig)
 
     val outputDir = (baseDir / "app").getPath
 

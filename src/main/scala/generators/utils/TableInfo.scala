@@ -47,7 +47,8 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
     val listCols : Option[Seq[Column]] = tableConfig.map( cfg => cfg.listColumns.map(mapColumnNamesToColumns(_))).flatten
 
     listCols match {
-      case Some(cols) => cols
+      case Some(cols) if cols.nonEmpty => cols
+      case Some(cols) if cols.isEmpty => columns.take(5)
       case None => columns.take(5)
     }
   }
@@ -59,7 +60,8 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
     val selectCols : Option[Seq[Column]] = tableConfig.map( cfg => cfg.selectColumns.map(mapColumnNamesToColumns(_))).flatten
 
     selectCols match {
-      case Some(cols) => cols
+      case Some(cols) if cols.nonEmpty => cols
+      case Some(cols) if cols.isEmpty => columns.take(5)
       case None => columns.take(5)
     }
   }
@@ -75,7 +77,7 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
   val isJunctionTable = getIsJunctionTable
 
   private def getIsJunctionTable : Boolean = {
-    val isJunctionFromConfig : Option[Boolean] = tableConfig.map( cfg => cfg.isJunctionTable.map(_)).flatten
+    val isJunctionFromConfig : Option[Boolean] = tableConfig.map( cfg => cfg.isJunctionTable.map(value => value)).flatten
 
     isJunctionFromConfig match {
       case Some(isJunction) => isJunction
