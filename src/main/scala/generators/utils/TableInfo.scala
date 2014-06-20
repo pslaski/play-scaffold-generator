@@ -85,6 +85,6 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
     }
   }
 
-  private def defaultIsJunctionTableCheck : Boolean = !columns.exists(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey)) && foreignKeys.length >= 2
+  private def defaultIsJunctionTableCheck : Boolean = !columns.exists(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey)) && foreignKeys.length == 2
 
 }

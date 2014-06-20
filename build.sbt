@@ -1,4 +1,4 @@
-name := "scaffold-generator"
+name := "play-scaffold-generator"
 
 version := "1.0"
 
