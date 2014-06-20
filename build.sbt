@@ -8,7 +8,7 @@ sbtPlugin := true
        
 libraryDependencies += "com.typesafe.slick" %% "slick" % "2.0.2"
 
-libraryDependencies += "com.typesafe" % "config" % "1.2.0"
+libraryDependencies += "com.typesafe" % "config" % "1.2.1"
 
 libraryDependencies += "org.postgresql" % "postgresql" % "9.3-1101-jdbc41"
 

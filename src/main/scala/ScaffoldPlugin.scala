@@ -12,7 +12,7 @@ object ScaffoldPlugin extends Plugin {
                                    squeryl <<= squerylCodeGenTask)
 
 	// slick code generation task
-  lazy val slick = TaskKey[Seq[File]]("scaffold-slick")
+  lazy val slick = TaskKey[Unit]("scaffold-slick")
   lazy val slickCodeGenTask = (baseDirectory in Compile, name, streams) map { (baseDir, appName, stream) =>
 
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
@@ -52,11 +52,11 @@ object ScaffoldPlugin extends Plugin {
     stream.log.info("Generating views and css completed....")
     
     val modelFileName = outputDir + "/" + config.modelsPackage + "/Tables.scala"
-    Seq(file(modelFileName))
+   // Seq(file(modelFileName))
   }
 
   // squeryl code generation task
-  lazy val squeryl = TaskKey[Seq[File]]("scaffold-squeryl")
+  lazy val squeryl = TaskKey[Unit]("scaffold-squeryl")
   lazy val squerylCodeGenTask = (baseDirectory in Compile, name, streams) map { (baseDir, appName, stream) =>
 
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
@@ -96,7 +96,7 @@ object ScaffoldPlugin extends Plugin {
     stream.log.info("Generating views and css completed....")
 
     val modelFileName = outputDir + "/" + config.modelsPackage + "/Tables.scala"
-    Seq(file(modelFileName))
+    //Seq(file(modelFileName))
   }
   
 }
