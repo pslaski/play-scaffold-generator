@@ -50,9 +50,7 @@ object ScaffoldPlugin extends Plugin {
     ViewGenerator.generate(config, outputDir)
 
     stream.log.info("Generating views and css completed....")
-    
-    val modelFileName = outputDir + "/" + config.modelsPackage + "/Tables.scala"
-   // Seq(file(modelFileName))
+
   }
 
   // squeryl code generation task
@@ -95,8 +93,6 @@ object ScaffoldPlugin extends Plugin {
 
     stream.log.info("Generating views and css completed....")
 
-    val modelFileName = outputDir + "/" + config.modelsPackage + "/Tables.scala"
-    //Seq(file(modelFileName))
   }
   
 }
