@@ -43,4 +43,13 @@ trait ConfigUtils {
  	  }
  	}
 
+  def getOptionString(key : String, config : com.typesafe.config.Config) : Option[String] = {
+ 	  try{
+ 	    Some(config.getString(key))
+ 	  }
+ 	  catch {
+ 	    case missing : ConfigException.Missing => None
+ 	  }
+ 	}
+
 }

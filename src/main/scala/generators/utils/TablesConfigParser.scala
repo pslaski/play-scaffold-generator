@@ -21,7 +21,10 @@ object TablesConfigParser extends ConfigUtils{
   }
 
   def parseConfigList(configList : List[com.typesafe.config.Config]) : List[TableConfig] = {
-    configList.map { cnfg =>
+
+    val configsWithNames = configList.filter(getOptionString("table-name", _).isDefined)
+
+    configsWithNames.map { cnfg =>
       new TableConfig(cnfg.getString("table-name"),
                        getOptionStringList("list-columns", cnfg),
                        getOptionStringList("select-columns", cnfg),
