@@ -1,8 +1,11 @@
 package generators.models.squeryl
 
-import generators.utils.{DriverLoader, GeneratorHelpers, Config, OutputHelpers}
+import generators.utils._
 
-class GlobalObjectGenerator(config : Config) extends OutputHelpers with GeneratorHelpers{
+object GlobalObjectGenerator extends OutputHelpers with GeneratorHelpers{
+
+  private val appConfig = AppConfigParser.getAppConfig
+
   override def code: String = {
     s"""
 ${imports}
@@ -26,6 +29,8 @@ object Global extends GlobalSettings {
 
   val h2Driver = "org.h2.Driver"
 
+  val jdbcDriver = appConfig.jdbcDriver
+
   def imports = (dynamicImports ++ fixedImports).mkString("\n")
 
   def fixedImports = {
@@ -37,17 +42,17 @@ object Global extends GlobalSettings {
   }
 
   def dynamicImports = {
-    if(config.jdbcDriver.equals(h2Driver)) Seq(importCode("org.squeryl.adapters.H2Adapter"))
+    if(jdbcDriver.equals(h2Driver)) Seq(importCode("org.squeryl.adapters.H2Adapter"))
     else {
-      Seq(importCode(s"org.squeryl.adapters.{H2Adapter, ${DriverLoader.jdbcToSquerylDriver(config.jdbcDriver)}}"))
+      Seq(importCode(s"org.squeryl.adapters.{H2Adapter, ${DriverLoader.jdbcToSquerylDriver(jdbcDriver)}}"))
     }
   }
 
   def drivers = {
-    if(config.jdbcDriver.equals(h2Driver)) Seq(driverCase(h2Driver, DriverLoader.jdbcToSquerylDriver(h2Driver)))
+    if(jdbcDriver.equals(h2Driver)) Seq(driverCase(h2Driver, DriverLoader.jdbcToSquerylDriver(h2Driver)))
     else {
       Seq(driverCase(h2Driver, DriverLoader.jdbcToSquerylDriver(h2Driver)),
-          driverCase(config.jdbcDriver, DriverLoader.jdbcToSquerylDriver(config.jdbcDriver)))
+          driverCase(jdbcDriver, DriverLoader.jdbcToSquerylDriver(jdbcDriver)))
     }
   }.mkString("\n\t\t\t")
 

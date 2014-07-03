@@ -1,8 +1,11 @@
 package generators.views
 
-import generators.utils.OutputHelpers
+import generators.utils.{AppConfigParser, OutputHelpers}
 
-class IndexViewGenerator(appName : String) extends OutputHelpers{
+object IndexViewGenerator extends OutputHelpers{
+
+  val appName = AppConfigParser.getAppConfig.applicationName
+
   override def code: String = {
 s"""
 @main("${appName}") {

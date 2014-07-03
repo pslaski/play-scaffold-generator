@@ -2,25 +2,25 @@ package generators.utils
 
 import java.io.File
 
+import com.typesafe.config.Config
+
 object TablesConfigParser extends ConfigUtils{
-	
-	private var config : com.typesafe.config.Config = null
 
   private var tablesConfigs : Option[List[TableConfig]] = None
 
   def parse(configFile : File) = {
-    config = parseFile(configFile)
+    val config = parseFile(configFile)
 
-    tablesConfigs = transformConfigsToTablesConfig
+    tablesConfigs = transformConfigsToTablesConfig(config)
   }
   
   def getTablesConfig = tablesConfigs
 
-  private def transformConfigsToTablesConfig = getOptionConfigList("tables", config).map{
+  private def transformConfigsToTablesConfig(config : Config) = getOptionConfigList("tables", config).map{
     configList => parseConfigList(configList)
   }
 
-  def parseConfigList(configList : List[com.typesafe.config.Config]) : List[TableConfig] = {
+  def parseConfigList(configList : List[Config]) : List[TableConfig] = {
 
     val configsWithNames = configList.filter(getOptionString("table-name", _).isDefined)
 

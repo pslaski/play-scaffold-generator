@@ -5,11 +5,13 @@ import generators.utils._
 import scala.slick.model.{Column, ForeignKey, Model}
 
 object SchemaGenerator {
-  def generate(config : Config, outputFolder : String) = {
+  def generate(outputFolder : String) = {
 
-    val pkg = config.modelsPackage
+    val appConfig = AppConfigParser.getAppConfig
 
-    val model = new ModelProvider(config).model
+    val pkg = appConfig.modelsPackage
+
+    val model = new ModelProvider(appConfig).model
 
     new SchemaGenerator(model).writeToFile(outputFolder, pkg)
   }

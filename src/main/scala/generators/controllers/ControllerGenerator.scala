@@ -5,13 +5,13 @@ import scala.slick.model.Table
 import generators.utils._
 
 object ControllerGenerator {
-  def generate(config : Config, outputFolder : String) = {
+  def generate(outputFolder : String) = {
 
-    val modelsPackage = config.modelsPackage
-    val controllersPackage = config.controllersPackage
+    val appConfig = AppConfigParser.getAppConfig
 
+    val controllersPackage = appConfig.controllersPackage
 
-    val model = new ModelProvider(config).model
+    val model = new ModelProvider(appConfig).model
 
     val foreignKeyInfo = new ForeignKeyInfo(model)
 
@@ -20,14 +20,16 @@ object ControllerGenerator {
     ApplicationControllerGenerator.writeToFile(outputFolder, controllersPackage)
 
     model.tables map { table =>
-      new ControllerGenerator(table, modelsPackage, foreignKeyInfo).writeToFile(outputFolder, controllersPackage)
+      new ControllerGenerator(table, foreignKeyInfo).writeToFile(outputFolder, controllersPackage)
     }
   }
 }
 
-class ControllerGenerator(table : Table, modelsPackage : String, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with ControllerGeneratorHelpers with GeneratorHelpers {
+class ControllerGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers with ControllerGeneratorHelpers with GeneratorHelpers {
 
   val mainTableInfo = new TableInfo(table)
+
+  val modelsPackage = AppConfigParser.getAppConfig.modelsPackage
 
   override val tableName: String = mainTableInfo.name
 

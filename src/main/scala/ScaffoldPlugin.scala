@@ -1,7 +1,7 @@
 import generators.models.slick.{TablesGenerator, SlickDaoObjectGenerator, DbConnectionGenerator}
 import generators.models.squeryl.{GlobalObjectGenerator, SquerylDaoObjectGenerator, SchemaGenerator}
 import generators.views.ViewGenerator
-import generators.utils.{TablesConfigParser, Config}
+import generators.utils.{AppConfigParser, TablesConfigParser}
 import sbt._
 import Keys._
 import generators.controllers.{CustomFormattersGenerator, ControllerGenerator}
@@ -17,7 +17,9 @@ object ScaffoldPlugin extends Plugin {
 
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
     
-    val config = new Config(configFile, appName)
+    AppConfigParser.parse(configFile, appName)
+
+    val appConfig = AppConfigParser.getAppConfig
 
     val scaffoldConfig = (baseDir / "/conf/scaffold-config.conf").getAbsoluteFile
 
@@ -27,27 +29,27 @@ object ScaffoldPlugin extends Plugin {
 
     stream.log.info("Start scaffold....")
       
-    TablesGenerator.generate(config, outputDir)
+    TablesGenerator.generate(outputDir)
 
     stream.log.info("Generating tables completed....")
     
-    DbConnectionGenerator.writeToFile(outputDir, config.utilsPackage)
+    DbConnectionGenerator.writeToFile(outputDir, appConfig.utilsPackage)
 
     stream.log.info("Generating DBconnection helper completed....")
 
-    SlickDaoObjectGenerator.generate(config, outputDir)
+    SlickDaoObjectGenerator.generate(outputDir)
 
     stream.log.info("Generating Dao objects completed....")
 
-    CustomFormattersGenerator.writeToFile(outputDir, config.utilsPackage)
+    CustomFormattersGenerator.writeToFile(outputDir, appConfig.utilsPackage)
 
     stream.log.info("Generating custom formatters completed....")
 
-    ControllerGenerator.generate(config,outputDir)
+    ControllerGenerator.generate(outputDir)
 
     stream.log.info("Generating controllers and routes completed....")
 
-    ViewGenerator.generate(config, outputDir)
+    ViewGenerator.generate(outputDir)
 
     stream.log.info("Generating views and css completed....")
 
@@ -59,7 +61,9 @@ object ScaffoldPlugin extends Plugin {
 
     val configFile = (baseDir / "/conf/application.conf").getAbsoluteFile
 
-    val config = new Config(configFile, appName)
+    AppConfigParser.parse(configFile, appName)
+
+    val appConfig = AppConfigParser.getAppConfig
 
     val scaffoldConfig = (baseDir / "/conf/scaffold-config.conf").getAbsoluteFile
 
@@ -69,27 +73,27 @@ object ScaffoldPlugin extends Plugin {
 
     stream.log.info("Start scaffold....")
 
-    new GlobalObjectGenerator(config).writeToFile(outputDir, "")
+    GlobalObjectGenerator.writeToFile(outputDir, "")
 
     stream.log.info("Generating schema completed....")
 
-    SchemaGenerator.generate(config, outputDir)
+    SchemaGenerator.generate(outputDir)
 
     stream.log.info("Generating schema completed....")
 
-    SquerylDaoObjectGenerator.generate(config, outputDir)
+    SquerylDaoObjectGenerator.generate(outputDir)
 
     stream.log.info("Generating Dao objects completed....")
 
-    CustomFormattersGenerator.writeToFile(outputDir, config.utilsPackage)
+    CustomFormattersGenerator.writeToFile(outputDir, appConfig.utilsPackage)
 
     stream.log.info("Generating custom formatters completed....")
 
-    ControllerGenerator.generate(config,outputDir)
+    ControllerGenerator.generate(outputDir)
 
     stream.log.info("Generating controllers and routes completed....")
 
-    ViewGenerator.generate(config, outputDir)
+    ViewGenerator.generate(outputDir)
 
     stream.log.info("Generating views and css completed....")
 

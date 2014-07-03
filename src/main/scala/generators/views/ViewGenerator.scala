@@ -2,19 +2,21 @@ package generators.views
 
 import scala.slick.model.Table
 import generators.css.MainCssGenerator
-import generators.utils.{TableInfo, ForeignKeyInfo, ModelProvider, Config}
+import generators.utils._
 
 object ViewGenerator {
-  def generate(config : Config, outputFolder : String) = {
+  def generate(outputFolder : String) = {
 
-    val pkg = config.viewsPackage
+    val appConfig = AppConfigParser.getAppConfig
 
-    val model = new ModelProvider(config).model
+    val pkg = appConfig.viewsPackage
+
+    val model = new ModelProvider(appConfig).model
 
     val foreignKeyInfo = new ForeignKeyInfo(model)
 
-    new MainLayoutViewGenerator(model, config.applicationName).writeToFile(outputFolder, pkg)
-    new IndexViewGenerator(config.applicationName).writeToFile(outputFolder, pkg)
+    new MainLayoutViewGenerator(model).writeToFile(outputFolder, pkg)
+    IndexViewGenerator.writeToFile(outputFolder, pkg)
 
     MainCssGenerator.writeToFile("public", "stylesheets")
 

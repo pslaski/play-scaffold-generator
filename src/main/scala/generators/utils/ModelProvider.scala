@@ -2,7 +2,7 @@ package generators.utils
 
 import scala.slick.jdbc.meta.createModel
 
-class ModelProvider(config : Config) {
+class ModelProvider(config : AppConfig) {
 
   private val jdbcDriver = config.jdbcDriver
   private val url = config.url
@@ -10,8 +10,8 @@ class ModelProvider(config : Config) {
   private val password = config.password
   private val excluded = Seq("play_evolutions")
 
-  lazy val slickDriver = DriverLoader.slickDriver(jdbcDriver)
-  lazy val slickDriverPath = DriverLoader.slickDriverPath(jdbcDriver)
+  val slickDriver = config.slickDriver
+  val slickDriverPath = config.slickDriverPath
 
   lazy val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
   lazy val model = db.withSession { implicit session =>

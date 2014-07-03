@@ -22,15 +22,25 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
 
   val queryObjectName : String = nameCamelCased
 
-  lazy val primaryKeyOpt = columns.find(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey))
+  val primaryKeyOpt = columns.find(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey))
 
-  lazy val (primaryKeyName, primaryKeyType) = primaryKeyOpt match {
+  val (primaryKeyName, primaryKeyType) = primaryKeyOpt match {
         case Some(col) => (standardColumnName(col.name), col.tpe)
         case None => {
           val col = columns.head
           (standardColumnName(col.name), col.tpe)
         }
       }
+
+  val primaryKeyColumns : Seq[Column]= {
+    table.primaryKey match {
+      case Some(pk) => pk.columns
+      case None => primaryKeyOpt match {
+        case Some(col) => Seq(col)
+        case None => Seq(columns.head)
+      }
+    }
+  }
 
   val formName = nameCamelCasedUncapitalized + "Form"
 
@@ -74,16 +84,18 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
     filteredColumns
   }
 
-  val isJunctionTable = getIsJunctionTable
+  lazy val isJunctionTable = getIsJunctionTable
 
   private def getIsJunctionTable : Boolean = {
     val isJunctionFromConfig : Option[Boolean] = tableConfig.map( cfg => cfg.isJunctionTable.map(value => value)).flatten
 
     isJunctionFromConfig match {
       case Some(isJunction) => isJunction
-      case None => defaultIsJunctionTableCheck
+      case None => false
     }
   }
+
+  val isSimpleJunctionTable = defaultIsJunctionTableCheck
 
   private def defaultIsJunctionTableCheck : Boolean = !columns.exists(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey)) && foreignKeys.length == 2
 

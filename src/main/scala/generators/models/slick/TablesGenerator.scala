@@ -1,15 +1,17 @@
 package generators.models.slick
 
-import generators.utils.{Config, ModelProvider}
+import generators.utils.{AppConfigParser, ModelProvider}
 
 object TablesGenerator{
-  def generate(config : Config, outputFolder : String) = {
+  def generate(outputFolder : String) = {
 
-    val pkg = config.modelsPackage
+    val appConfig = AppConfigParser.getAppConfig
 
-    val modelProvider = new ModelProvider(config)
+    val pkg = appConfig.modelsPackage
 
-    val slickDriverPath = modelProvider.slickDriverPath
+    val modelProvider = new ModelProvider(appConfig)
+
+    val slickDriverPath = appConfig.slickDriverPath
 
     val mainModel = modelProvider.model
     val codegen = new scala.slick.model.codegen.SourceCodeGenerator(mainModel)

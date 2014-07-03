@@ -1,11 +1,13 @@
 package generators.views
 
 import scala.slick.model.Model
-import generators.utils.{TableInfo, StringUtils, OutputHelpers}
+import generators.utils.{AppConfigParser, TableInfo, StringUtils, OutputHelpers}
 
-class MainLayoutViewGenerator(model : Model, appName : String) extends OutputHelpers with StringUtils{
+class MainLayoutViewGenerator(model : Model) extends OutputHelpers with StringUtils{
 
   val tablesInfo = model.tables.map(new TableInfo(_))
+
+  val appName = AppConfigParser.getAppConfig.applicationName
 
   def menu = {
     s"""

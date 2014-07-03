@@ -5,11 +5,13 @@ import generators.utils._
 import scala.slick.model.Table
 
 object SquerylDaoObjectGenerator {
-  def generate(config : Config, outputFolder : String) = {
+  def generate(outputFolder : String) = {
 
-    val pkg = config.modelsPackage
+    val appConfig = AppConfigParser.getAppConfig
 
-    val model = new ModelProvider(config).model
+    val pkg = appConfig.modelsPackage
+
+    val model = new ModelProvider(appConfig).model
 
     val foreignKeyInfo = new ForeignKeyInfo(model)
 

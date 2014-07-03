@@ -2,7 +2,7 @@ package generators.models.slick
 
 import generators.utils.{TableInfo, GeneratorHelpers}
 
-import scala.slick.model.ForeignKey
+import scala.slick.model.{Column, ForeignKey}
 
 trait SlickDaoGeneratorHelpers extends GeneratorHelpers{
 
@@ -16,23 +16,26 @@ trait SlickDaoGeneratorHelpers extends GeneratorHelpers{
 
   val primaryKeyType : String
 
+  val primaryKeyColumns : Seq[Column]
+
   val queryObjectName : String
 
   val fieldsForSimpleName : Seq[String]
   
-  def saveMethodCode = {
+  def saveReturnIdMethodCode(autoIncId : String) = {
     
     s"""
-def save(${rowName}: ${tableRowName}) : ${primaryKeyType} = {
-  ${queryObjectName} returning ${queryObjectName}.map(_.${primaryKeyName}) insert(${rowName})
+def save(${rowName}: ${tableRowName}) : ${tableRowName} = {
+  ${queryObjectName} returning ${queryObjectName}.map(_.${autoIncId}) into((row, id) => row.copy(${autoIncId} = id)) insert(${rowName})
 }""".trim()
   }
 
-  def saveJunctionMethodCode = {
+  def saveSimpleMethodCode = {
 
     s"""
-def save(${rowName}: ${tableRowName}) = {
+def save(${rowName}: ${tableRowName}) : ${tableRowName} = {
   ${queryObjectName} insert(${rowName})
+  ${rowName}
 }""".trim()
   }
   
@@ -45,14 +48,14 @@ def findAll : List[${tableRowName}] = {
   
   def findByIdMethodCode = {
     s"""
-def findById(${primaryKeyName}: ${primaryKeyType}) : Option[${tableRowName}] = {
-  val queryFindById = ${findByCode(primaryKeyName)}
+def findById(${makeArgsWithTypes(primaryKeyColumns)}) : Option[${tableRowName}] = {
+  val queryFindById = ${findByCode(primaryKeyColumns)}
 
   queryFindById.firstOption
 }""".trim()
   }
   
-  def deleteMethodCode(childData : Seq[(String,String)]) = {
+  def deleteMethodCode(childData : Seq[(TableInfo, ForeignKey)]) = {
 
     val childsCode = {
       if(childData.nonEmpty){
@@ -70,9 +73,9 @@ s"""
     }
 
     s"""
-def delete(${primaryKeyName}: ${primaryKeyType}) = {
+def delete(${makeArgsWithTypes(primaryKeyColumns)}) = {
 
-  val queryFindById = ${findByCode(primaryKeyName)}
+  val queryFindById = ${findByCode(primaryKeyColumns)}
 
   ${childsCode}
 
@@ -80,14 +83,22 @@ def delete(${primaryKeyName}: ${primaryKeyType}) = {
 }""".trim()
   }
 
-  def deleteChilds(childDao : String, childName : String) = {
-    s"${childDao}.delete${childName + "s"}For${queryObjectName}(obj)"
+  def deleteChilds(childTabInfo : TableInfo, fk : ForeignKey) = {
+    val referencingColumns = makeColumnsAndString(fk.referencingColumns)
+
+    s"${childTabInfo.daoObjectName}.delete${childTabInfo.nameCamelCased + "s"}By${referencingColumns}For${queryObjectName}(obj)"
   }
 
-  def findByCode(fieldName : String) = {
+  def findByCode(columns : Seq[Column]) = {
+
+    val findingColumns = columns.map { column =>
+      val colName = standardColumnName(column.name)
+      s"""row.${colName} === ${colName}"""
+    }.mkString(" && ")
+
     s"""
 for {
-    row <- ${queryObjectName} if row.${fieldName} === ${fieldName}
+    row <- ${queryObjectName} if ${findingColumns}
   } yield row""".trim()
   }
 
@@ -113,10 +124,16 @@ def delete(${idColumns}) = {
   }
   
   def updateMethodCode = {
+
+    val findingColumns = primaryKeyColumns.map { column =>
+      val colName = standardColumnName(column.name)
+      s"""row.${colName} === updatedRow.${colName}"""
+    }.mkString(" && ")
+
     s"""
 def update(updatedRow: ${tableRowName}) = {
   val queryFindById = for {
-    row <- ${queryObjectName} if row.${primaryKeyName} === updatedRow.${primaryKeyName}
+    row <- ${queryObjectName} if ${findingColumns}
   } yield row
 
   queryFindById.update(updatedRow)
@@ -127,7 +144,9 @@ def update(updatedRow: ${tableRowName}) = {
 
     val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
 
-    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}Query"
+    val referencingColumns = makeColumnsAndString(foreignKey.referencingColumns)
+
+    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}Query"
 
     val joiningColumns = {
       "row => " + ((foreignKey.referencingColumns.map(_.name) zip foreignKey.referencedColumns.map(_.name)).map{
@@ -142,11 +161,13 @@ def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
 """.trim()
   }
 
-  def findByForeignKeyMethodCode(referencedTableInfo : TableInfo) = {
+  def findByForeignKeyMethodCode(referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
 
     val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
 
-    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}"
+    val referencingColumns = makeColumnsAndString(foreignKey.referencingColumns)
+
+    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}"
 
     val queryName = methodName + "Query"
 
@@ -157,13 +178,15 @@ def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) : List
 """.trim()
   }
 
-  def deleteByForeignKeyMethodCode(referencedTableInfo : TableInfo) = {
+  def deleteByForeignKeyMethodCode(referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
 
     val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
 
-    val methodName = s"delete${rowNameCamelCased +"s"}For${referencedTableInfo.nameCamelCased}"
+    val referencingColumns = makeColumnsAndString(foreignKey.referencingColumns)
 
-    val queryName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}Query"
+    val methodName = s"delete${rowNameCamelCased +"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}"
+
+    val queryName = s"${rowNameCamelCased.uncapitalize+"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}Query"
 
     s"""
 def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
@@ -172,21 +195,23 @@ def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
 """.trim()
   }
 
-  def findByJunctionTableMethodCode(junctionTableInfo : TableInfo,referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
+  def findByJunctionTableMethodCode(junctionTableInfo : TableInfo,referencedTableInfo : TableInfo, foreignKeyToFirstSide : ForeignKey, foreignKeyToSecondSide : ForeignKey) = {
 
     val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
 
+    val referencingColumns = makeColumnsAndString(foreignKeyToSecondSide.referencingColumns)
+
     val methodName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}"
 
-    val junctionRow = junctionTableInfo.name
+    val junctionRow = junctionTableInfo.name.uncapitalize
 
     val joiningColumns = {
-      "row => " + ((foreignKey.referencedColumns.map(_.name) zip foreignKey.referencingColumns.map(_.name)).map{
+      "row => " + ((foreignKeyToFirstSide.referencedColumns.map(_.name) zip foreignKeyToFirstSide.referencingColumns.map(_.name)).map{
         case (lcol,rcol) => "row." + standardColumnName(lcol) + " === " + junctionRow + "." + standardColumnName(rcol)
       }.mkString(" && "))
     }
 
-    val findJunctionQueryName = s"${junctionTableInfo.nameCamelCasedUncapitalized+"s"}For${referencedTableInfo.nameCamelCased}Query"
+    val findJunctionQueryName = s"${junctionTableInfo.nameCamelCasedUncapitalized+"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}Query"
 
     val resultListName = rowNameCamelCased.uncapitalize+"s"
 
@@ -202,11 +227,15 @@ def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) : List
 """.trim()
   }
 
-  def formOptionsMethodCode = {
+  def formOptionsMethodCode(foreignKey : ForeignKey) = {
+
+    val refCol = foreignKey.referencedColumns.head.name
+    val colName = standardColumnName(refCol)
+
     s"""
-def formOptions : Seq[(String, String)] = {
+def formOptionsBy${colName.toCamelCase} : Seq[(String, String)] = {
   ${queryObjectName}.list.map{ row =>
-    (row.${primaryKeyName}.toString, ${fieldsForSimpleName.map("row." + _).mkString(" + \" \" + ")})
+    (row.${colName}.toString, ${fieldsForSimpleName.map("row." + _).mkString(" + \" \" + ")})
   }
 }""".trim()
   }
