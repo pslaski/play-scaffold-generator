@@ -27,8 +27,6 @@ class SlickDaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) ex
 
   val mainTableInfo = new TableInfo(table)
 
-  val appConfig = AppConfigParser.getAppConfig
-
   override val rowName: String = mainTableInfo.name.toLowerCase
 
   override val rowNameCamelCased : String = rowName.toCamelCase
@@ -111,6 +109,8 @@ ${methods}
 
     val tableChildrenInfo = foreignKeyInfo.parentChildrenTablesInfo(table.name)
 
+    val formOptions = foreignKeyInfo.foreignKeysReferencedTable(table.name).map(_.referencedColumns.head).distinct.map(col => formOptionsMethodCode(standardColumnName(col.name)))
+
     val joinedByJunctionTable = tableChildrenInfo.filter(tabInfo => tabInfo.isJunctionTable || tabInfo.isSimpleJunctionTable).map{ childTableInfo =>
       val foreignKeyToFirstSide = childTableInfo.foreignKeys.filter(_.referencedTable == table.name).head
       val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
@@ -127,7 +127,7 @@ ${methods}
         deleteByForeignKeyMethodCode(referencedTableInfo, fk))
     }.flatten
 
-    joinedByJunctionTable ++ joinedByForeignKey
+    formOptions ++ joinedByJunctionTable ++ joinedByForeignKey
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {

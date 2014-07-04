@@ -227,10 +227,7 @@ def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) : List
 """.trim()
   }
 
-  def formOptionsMethodCode(foreignKey : ForeignKey) = {
-
-    val refCol = foreignKey.referencedColumns.head.name
-    val colName = standardColumnName(refCol)
+  def formOptionsMethodCode(colName : String) = {
 
     s"""
 def formOptionsBy${colName.toCamelCase} : Seq[(String, String)] = {
