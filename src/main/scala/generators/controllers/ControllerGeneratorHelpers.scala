@@ -1,8 +1,10 @@
 package generators.controllers
 
-import generators.utils.{TableInfo, StringUtils}
+import generators.utils.{GeneratorHelpers, TableInfo, StringUtils}
 
-trait ControllerGeneratorHelpers extends StringUtils{
+import scala.slick.model.Column
+
+trait ControllerGeneratorHelpers extends GeneratorHelpers{
 
   val tableName : String
 
@@ -18,7 +20,9 @@ trait ControllerGeneratorHelpers extends StringUtils{
 
   val primaryKeyType : String
 
-  val parentDaoObjects : Seq[String]
+  val primaryKeyColumns : Seq[Column]
+
+  val parentDaoObjectsAndReferencedColumn : Seq[(TableInfo, Column)]
 
   val childsData : Seq[(String, String)]
 
@@ -82,8 +86,8 @@ def save = Action { implicit request =>
 
   def showMethod = {
     s"""
-def show(${primaryKeyName} : ${primaryKeyType}) = Action {
-  ${daoObjectName}.findById(${primaryKeyName}).fold(
+def show(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
+  ${daoObjectName}.findById(${makeArgsWithoutTypes(primaryKeyColumns)}).fold(
     BadRequest("Not existed")
   ){
     obj => {
@@ -107,14 +111,17 @@ def show(${primaryKeyName} : ${primaryKeyType}) = Action {
 
   def editMethod = {
     s"""
-def edit(${primaryKeyName} : ${primaryKeyType}) = Action {
-  ${daoObjectName}.findById(${primaryKeyName}).map { obj =>
+def edit(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
+  ${daoObjectName}.findById(${makeArgsWithoutTypes(primaryKeyColumns)}).map { obj =>
       Ok(views.html.${viewsPackage}.editForm(${formName}.fill(obj)${formOptions}))
   }.getOrElse(NotFound)
 }""".trim()
   }
 
   def updateMethod = {
+
+    val showArgs = primaryKeyColumns.map(col => standardColumnName(col.name)).map("formData." + _).mkString(", ")
+
     s"""
 def update = Action { implicit request =>
   ${formName}.bindFromRequest.fold(
@@ -123,7 +130,7 @@ def update = Action { implicit request =>
     },
     formData => {
       ${daoObjectName}.update(formData)
-      Redirect(routes.${controllerName}.show(formData.${primaryKeyName}))
+      Redirect(routes.${controllerName}.show(${showArgs}))
     }
   )
 }""".trim()
@@ -131,8 +138,8 @@ def update = Action { implicit request =>
 
   def deleteMethod = {
     s"""
-def delete(${primaryKeyName} : ${primaryKeyType}) = Action {
-  ${daoObjectName}.delete(${primaryKeyName})
+def delete(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
+  ${daoObjectName}.delete(${makeArgsWithoutTypes(primaryKeyColumns)})
   Redirect(routes.${controllerName}.list)
 }""".trim()
   }
@@ -166,10 +173,10 @@ def delete${junctionTableInfo.nameCamelCased}(${idColumns}) = Action {
   }
 
   private def formOptions = {
-    if(parentDaoObjects.isEmpty){
+    if(parentDaoObjectsAndReferencedColumn.isEmpty){
       ""
     } else {
-      ", " + parentDaoObjects.map(_ + ".formOptions").mkString(", ")
+      ", " + parentDaoObjectsAndReferencedColumn.map(data => data._1.daoObjectName + ".formOptionsBy" + makeColumnsAndString(Seq(data._2))).mkString(", ")
     }
   }
 }

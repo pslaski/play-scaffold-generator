@@ -48,9 +48,14 @@ class ControllerGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extend
   override val primaryKeyName: String = mainTableInfo.primaryKeyName
   override val primaryKeyType: String = mainTableInfo.primaryKeyType
 
-  override val parentDaoObjects: Seq[String] = table.foreignKeys.map { fk =>
-    new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable)).daoObjectName
+  override val primaryKeyColumns: Seq[Column] = mainTableInfo.primaryKeyColumns
+
+  override val parentDaoObjectsAndReferencedColumn: Seq[(TableInfo, Column)] = {
+    table.foreignKeys.map(fk => (fk.referencedTable, fk.referencedColumns.head)).distinct.map{ tup =>
+      (new TableInfo(foreignKeyInfo.tablesByName(tup._1)), tup._2)
+    }
   }
+
   override val childsData: Seq[(String, String)] = {
     foreignKeyInfo.foreignKeysReferencedTable(table.name).map { fk =>
       val tabInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))

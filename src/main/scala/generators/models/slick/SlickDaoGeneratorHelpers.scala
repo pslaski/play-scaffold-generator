@@ -12,10 +12,6 @@ trait SlickDaoGeneratorHelpers extends GeneratorHelpers{
 
   val tableRowName : String
 
-  val primaryKeyName : String
-
-  val primaryKeyType : String
-
   val primaryKeyColumns : Seq[Column]
 
   val queryObjectName : String

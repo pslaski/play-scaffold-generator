@@ -31,9 +31,6 @@ class SlickDaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) ex
 
   override val rowNameCamelCased : String = rowName.toCamelCase
 
-  override val primaryKeyName: String = mainTableInfo.primaryKeyName
-  override val primaryKeyType: String = mainTableInfo.primaryKeyType
-
   override val primaryKeyColumns: Seq[Column] = mainTableInfo.primaryKeyColumns
 
   override val tableRowName: String = mainTableInfo.tableRowName
