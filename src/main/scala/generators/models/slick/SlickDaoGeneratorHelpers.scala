@@ -42,21 +42,33 @@ def findAll : List[${tableRowName}] = {
 }""".trim()
   }
   
-  def findByIdMethodCode = {
-    s"""
-def findById(${makeArgsWithTypes(primaryKeyColumns)}) : Option[${tableRowName}] = {
-  val queryFindById = ${findByCode(primaryKeyColumns)}
+  def findByPrimaryKeyMethodCode = {
 
-  queryFindById.firstOption
+    val methodArgs = makeArgsWithTypes(primaryKeyColumns)
+
+    val queryName = makeFindByQueryCompiledMethodName(primaryKeyColumns)
+
+    val queryArgs = makeArgsWithoutTypes(primaryKeyColumns)
+
+    s"""
+def findByPrimaryKey(${methodArgs}) : Option[${tableRowName}] = {
+  ${queryName}(${queryArgs}).firstOption
 }""".trim()
   }
   
   def deleteMethodCode(childData : Seq[(TableInfo, ForeignKey)]) = {
 
+    val methodArgs = makeArgsWithTypes(primaryKeyColumns)
+
+    val queryArgs = makeArgsWithoutTypes(primaryKeyColumns)
+
+    val findQuery = makeFindByQueryCompiledMethodName(primaryKeyColumns)
+
     val childsCode = {
       if(childData.nonEmpty){
+
 s"""
-   val objOption = queryFindById.firstOption
+   val objOption = findByPrimaryKey(${queryArgs})
 
    objOption match {
      case Some(obj) => {
@@ -64,38 +76,25 @@ s"""
      }
      case None => "Not finded"
    }
+
  """.trim()
       } else ""
     }
 
     s"""
-def delete(${makeArgsWithTypes(primaryKeyColumns)}) = {
-
-  val queryFindById = ${findByCode(primaryKeyColumns)}
-
+def delete(${methodArgs}) = {
   ${childsCode}
-
-  queryFindById.delete
+  ${findQuery}(${queryArgs}).delete
 }""".trim()
   }
 
   def deleteChilds(childTabInfo : TableInfo, fk : ForeignKey) = {
-    val referencingColumns = makeColumnsAndString(fk.referencingColumns)
 
-    s"${childTabInfo.daoObjectName}.delete${childTabInfo.nameCamelCased + "s"}By${referencingColumns}For${queryObjectName}(obj)"
-  }
+    val deleteQuery = makeDeleteByMethodName(fk.referencingColumns)
 
-  def findByCode(columns : Seq[Column]) = {
+    val queryArgs = fk.referencedColumns.map(col => "obj." + standardColumnName(col.name)).mkString(", ")
 
-    val findingColumns = columns.map { column =>
-      val colName = standardColumnName(column.name)
-      s"""row.${colName} === ${colName}"""
-    }.mkString(" && ")
-
-    s"""
-for {
-    row <- ${queryObjectName} if ${findingColumns}
-  } yield row""".trim()
+    s"${childTabInfo.daoObjectName}.${deleteQuery}(${queryArgs})"
   }
 
   def deleteJunctionMethodCode(foreignKeys : Seq[ForeignKey]) = {
@@ -121,83 +120,79 @@ def delete(${idColumns}) = {
   
   def updateMethodCode = {
 
-    val findingColumns = primaryKeyColumns.map { column =>
+    val queryName = makeFindByQueryCompiledMethodName(primaryKeyColumns)
+
+    val queryArgs = primaryKeyColumns.map { column =>
       val colName = standardColumnName(column.name)
-      s"""row.${colName} === updatedRow.${colName}"""
-    }.mkString(" && ")
+      s"""updatedRow.${colName}"""
+    }.mkString(", ")
 
     s"""
 def update(updatedRow: ${tableRowName}) = {
-  val queryFindById = for {
-    row <- ${queryObjectName} if ${findingColumns}
-  } yield row
-
-  queryFindById.update(updatedRow)
+  ${queryName}(${queryArgs}).update(updatedRow)
 }""".trim()
   }
 
-  def findByForeignKeyQueryMethodCode(referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
+  def findByQueryMethodCode(columns : Seq[Column]) = {
 
-    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
+    val args = makeArgsWithColumnTypes(columns)
 
-    val referencingColumns = makeColumnsAndString(foreignKey.referencingColumns)
+    val rowComparingArgs = makeRowComparing(columns)
 
-    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}Query"
+    val methodName = makeFindByQueryMethodName(columns)
 
-    val joiningColumns = {
-      "row => " + ((foreignKey.referencingColumns.map(_.name) zip foreignKey.referencedColumns.map(_.name)).map{
-        case (lcol,rcol) => "row." + standardColumnName(lcol) + " === " + referencedRow + "." + standardColumnName(rcol)
-      }.mkString(" && "))
-    }
+    val compiledName = makeFindByQueryCompiledMethodName(columns)
 
   s"""
-def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
-  ${queryObjectName}.filter(${joiningColumns})
+def ${methodName}(${args}) = {
+  ${queryObjectName}.filter(row => ${rowComparingArgs})
 }
+
+val ${compiledName} = Compiled(${methodName} _)
 """.trim()
   }
 
-  def findByForeignKeyMethodCode(referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
+  def findByMethodCode(columns : Seq[Column]) = {
 
-    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
+    val args = makeArgsWithTypes(columns)
 
-    val referencingColumns = makeColumnsAndString(foreignKey.referencingColumns)
+    val methodName = makeFindByMethodName(columns)
 
-    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}"
+    val compiledName = makeFindByQueryCompiledMethodName(columns)
 
-    val queryName = methodName + "Query"
+    val compiledArgs = makeArgsWithoutTypes(columns)
 
   s"""
-def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) : List[${tableRowName}] = {
-  ${queryName}(${referencedRow}).list
+def ${methodName}(${args}) : List[${tableRowName}] = {
+  ${compiledName}(${compiledArgs}).list
 }
 """.trim()
   }
 
-  def deleteByForeignKeyMethodCode(referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
+  def deleteByMethodCode(columns : Seq[Column]) = {
 
-    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
+    val args = makeArgsWithTypes(columns)
 
-    val referencingColumns = makeColumnsAndString(foreignKey.referencingColumns)
+    val methodName = makeDeleteByMethodName(columns)
 
-    val methodName = s"delete${rowNameCamelCased +"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}"
+    val compiledName = makeFindByQueryCompiledMethodName(columns)
 
-    val queryName = s"${rowNameCamelCased.uncapitalize+"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}Query"
+    val compiledArgs = makeArgsWithoutTypes(columns)
 
-    s"""
-def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
-  ${queryName}(${referencedRow}).delete
+  s"""
+def ${methodName}(${args}) = {
+  ${compiledName}(${compiledArgs}).delete
 }
 """.trim()
   }
 
-  def findByJunctionTableMethodCode(junctionTableInfo : TableInfo,referencedTableInfo : TableInfo, foreignKeyToFirstSide : ForeignKey, foreignKeyToSecondSide : ForeignKey) = {
+  def findByJunctionTableMethodsCode(junctionTableInfo : TableInfo, foreignKeyToFirstSide : ForeignKey, foreignKeyToSecondSide : ForeignKey) = {
 
-    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
+    val secondSideReferencingColumns = foreignKeyToSecondSide.referencingColumns
 
-    val referencingColumns = makeColumnsAndString(foreignKeyToSecondSide.referencingColumns)
+    val queryName = makeFindByQueryMethodName(secondSideReferencingColumns)
 
-    val methodName = s"${rowNameCamelCased.uncapitalize+"s"}For${referencedTableInfo.nameCamelCased}"
+    val queryArgs = makeArgsWithColumnTypes(secondSideReferencingColumns)
 
     val junctionRow = junctionTableInfo.name.uncapitalize
 
@@ -207,18 +202,28 @@ def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) = {
       }.mkString(" && "))
     }
 
-    val findJunctionQueryName = s"${junctionTableInfo.nameCamelCasedUncapitalized+"s"}By${referencingColumns}For${referencedTableInfo.nameCamelCased}Query"
+    val findJunctionArgs = makeArgsWithoutTypes(secondSideReferencingColumns)
 
     val resultListName = rowNameCamelCased.uncapitalize+"s"
 
+    val compiledName = makeFindByQueryCompiledMethodName(secondSideReferencingColumns)
+
+    val findByMethodName = makeFindByMethodName(secondSideReferencingColumns)
+
+    val findByMethodArgs = makeArgsWithTypes(secondSideReferencingColumns)
+
   s"""
-def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) : List[${tableRowName}] = {
-  val query = for {
-    ${junctionRow} <- ${junctionTableInfo.daoObjectName}.${findJunctionQueryName}(${referencedRow})
+def ${queryName}(${queryArgs}) = {
+  for {
+    ${junctionRow} <- ${junctionTableInfo.daoObjectName}.${queryName}(${findJunctionArgs})
     ${resultListName} <- ${queryObjectName}.filter(${joiningColumns})
   } yield ${resultListName}
+}
 
-  query.list
+val ${compiledName} = Compiled(${queryName} _)
+
+def ${findByMethodName}(${findByMethodArgs}) : List[${tableRowName}] = {
+  ${compiledName}(${findJunctionArgs}).list
 }
 """.trim()
   }

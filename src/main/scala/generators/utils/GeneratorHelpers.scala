@@ -15,9 +15,34 @@ trait GeneratorHelpers extends StringUtils {
     standardColumnName(column.name) + " : " + column.tpe
   }.mkString(", ")
 
+  def makeArgsWithColumnTypes(columns : Seq[Column]) : String = columns.map {column =>
+    standardColumnName(column.name) + " : Column[" + column.tpe + "]"
+  }.mkString(", ")
+
   def makeArgsWithoutTypes(columns : Seq[Column]) : String = columns.map {column =>
     standardColumnName(column.name)
   }.mkString(", ")
 
+  def makeRowComparing(columns : Seq[Column]) : String = columns.map { column =>
+    val colName = standardColumnName(column.name)
+    s"""row.${colName} === ${colName}"""
+  }.mkString(" && ")
+
   def makeColumnsAndString(columns : Seq[Column]) : String = columns.map(col => standardColumnName(col.name).capitalize).mkString("And")
+
+  def makeFindByMethodName(columns : Seq[Column]) : String = {
+    "findBy" + makeColumnsAndString(columns)
+  }
+
+  def makeDeleteByMethodName(columns : Seq[Column]) : String = {
+    "deleteBy" + makeColumnsAndString(columns)
+  }
+
+  def makeFindByQueryMethodName(columns : Seq[Column]) : String = {
+    makeFindByMethodName(columns) + "Query"
+  }
+
+  def makeFindByQueryCompiledMethodName(columns : Seq[Column]) : String = {
+    makeFindByQueryMethodName(columns) + "Compiled"
+  }
 }

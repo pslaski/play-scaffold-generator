@@ -90,7 +90,8 @@ ${methods}
       }
     }
 
-    saveMethod +: Seq(findByIdMethodCode,
+    saveMethod +: Seq(findByQueryMethodCode(primaryKeyColumns),
+                      findByPrimaryKeyMethodCode,
                       updateMethodCode,
                       deleteMethodCode(cascadeChildData),
                       findAllMethodCode)
@@ -108,23 +109,21 @@ ${methods}
 
     val formOptions = foreignKeyInfo.foreignKeysReferencedTable(table.name).map(_.referencedColumns.head).distinct.map(col => formOptionsMethodCode(standardColumnName(col.name)))
 
-    val joinedByJunctionTable = tableChildrenInfo.filter(tabInfo => tabInfo.isJunctionTable || tabInfo.isSimpleJunctionTable).map{ childTableInfo =>
-      val foreignKeyToFirstSide = childTableInfo.foreignKeys.filter(_.referencedTable == table.name).head
-      val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
-      val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
-      val tableSecondSideInfo = new TableInfo(tableSecondSide)
-
-      findByJunctionTableMethodCode(childTableInfo, tableSecondSideInfo, foreignKeyToFirstSide, foreignKeyToSecondSide)
-    }
-
-    val joinedByForeignKey = table.foreignKeys.map { fk =>
-      val referencedTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable))
-      Seq(findByForeignKeyQueryMethodCode(referencedTableInfo, fk),
-        findByForeignKeyMethodCode(referencedTableInfo, fk),
-        deleteByForeignKeyMethodCode(referencedTableInfo, fk))
+    val findByMethods = table.foreignKeys.map { fk =>
+      val columns = fk.referencingColumns
+      Seq(findByQueryMethodCode(columns),
+          findByMethodCode(columns),
+          deleteByMethodCode(columns))
     }.flatten
 
-    formOptions ++ joinedByJunctionTable ++ joinedByForeignKey
+    val joinedByJunctionTableMethods = tableChildrenInfo.filter(tabInfo => tabInfo.isJunctionTable || tabInfo.isSimpleJunctionTable).map{ childTableInfo =>
+      val foreignKeyToFirstSide = childTableInfo.foreignKeys.filter(_.referencedTable == table.name).head
+      val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
+
+      findByJunctionTableMethodsCode(childTableInfo, foreignKeyToFirstSide, foreignKeyToSecondSide)
+    }
+
+    formOptions ++ findByMethods ++ joinedByJunctionTableMethods
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {
