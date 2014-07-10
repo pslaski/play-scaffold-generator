@@ -1,7 +1,6 @@
 package generators.controllers
 
-import scala.slick.model.Column
-import scala.slick.model.Table
+import scala.slick.model.{ForeignKey, Column, Table}
 import generators.utils._
 
 object ControllerGenerator {
@@ -56,16 +55,16 @@ class ControllerGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extend
     }
   }
 
-  override val childsData: Seq[(String, String)] = {
+  override val childsData: Seq[(TableInfo, ForeignKey)] = {
     foreignKeyInfo.foreignKeysReferencedTable(table.name).map { fk =>
       val tabInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
-      if(tabInfo.isJunctionTable){
+      if(tabInfo.isJunctionTable || tabInfo.isSimpleJunctionTable){
         val foreignKeyToSecondSide = tabInfo.foreignKeys.filter(_.referencedTable != table.name).head
         val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
         val tableSecondSideInfo = new TableInfo(tableSecondSide)
-        (tableSecondSideInfo.name, tableSecondSideInfo.daoObjectName)
+        (tableSecondSideInfo, fk)
       } else {
-        (tabInfo.name, tabInfo.daoObjectName)
+        (tabInfo, fk)
       }
     }
   }
@@ -105,7 +104,7 @@ object ${objectName} extends Controller {
   }
 
   def methods : String = {
-    if(mainTableInfo.isJunctionTable) methodsForJunctionTable.mkString("\n\n")
+    if(mainTableInfo.isSimpleJunctionTable) methodsForSimpleJunctionTable.mkString("\n\n")
     else methodsForSimpleTable.mkString("\n\n")
   }
   
@@ -123,7 +122,7 @@ object ${objectName} extends Controller {
       deleteMethod) ++ deleteJunctionMethods
   }
   
-  def methodsForJunctionTable = Seq(indexJunctionMethod,
+  def methodsForSimpleJunctionTable = Seq(indexJunctionMethod,
                                     createMethod,
                                     saveJunctionMethod)
 

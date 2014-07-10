@@ -2,7 +2,7 @@ package generators.controllers
 
 import generators.utils.{GeneratorHelpers, TableInfo, StringUtils}
 
-import scala.slick.model.Column
+import scala.slick.model.{ForeignKey, Column}
 
 trait ControllerGeneratorHelpers extends GeneratorHelpers{
 
@@ -24,7 +24,7 @@ trait ControllerGeneratorHelpers extends GeneratorHelpers{
 
   val parentDaoObjectsAndReferencedColumn : Seq[(TableInfo, Column)]
 
-  val childsData : Seq[(String, String)]
+  val childsData : Seq[(TableInfo, ForeignKey)]
 
   def indexMethod = {
     s"""
@@ -55,6 +55,9 @@ def create = Action { implicit request =>
   }
 
   def saveMethod = {
+
+    val showArgs = primaryKeyColumns.map(col => "row." + standardColumnName(col.name)).mkString(", ")
+
     s"""
 def save = Action { implicit request =>
   ${formName}.bindFromRequest.fold(
@@ -62,8 +65,8 @@ def save = Action { implicit request =>
       BadRequest(views.html.${viewsPackage}.createForm(formWithErrors${formOptions}))
     },
     formData => {
-      val id = ${daoObjectName}.save(formData)
-      Redirect(routes.${controllerName}.show(id))
+      val row = ${daoObjectName}.save(formData)
+      Redirect(routes.${controllerName}.show(${showArgs}))
     }
   )
 }""".trim()
@@ -87,7 +90,7 @@ def save = Action { implicit request =>
   def showMethod = {
     s"""
 def show(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
-  ${daoObjectName}.findById(${makeArgsWithoutTypes(primaryKeyColumns)}).fold(
+  ${daoObjectName}.findByPrimaryKey(${makeArgsWithoutTypes(primaryKeyColumns)}).fold(
     BadRequest("Not existed")
   ){
     obj => {
@@ -104,15 +107,20 @@ def show(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
     }.mkString("\n")
   }
 
-  private def childFinder(child : String, childDao : String) = {
-    val childName = child.toCamelCase.uncapitalize + "s"
-    s"val ${childName} = ${childDao}.${childName}For${tableName.toCamelCase}(obj)"
+  private def childFinder(child : TableInfo, fk : ForeignKey) = {
+    val childName = child.nameCamelCasedUncapitalized + "sBy" + makeColumnsAndString(fk.referencingColumns)
+
+    val findMethod = makeFindByMethodName(fk.referencingColumns)
+
+    val findMethodArgs = fk.referencedColumns.map(col => "obj." + standardColumnName(col.name)).mkString(", ")
+
+    s"val ${childName} = ${child.daoObjectName}.${findMethod}(${findMethodArgs})"
   }
 
   def editMethod = {
     s"""
 def edit(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
-  ${daoObjectName}.findById(${makeArgsWithoutTypes(primaryKeyColumns)}).map { obj =>
+  ${daoObjectName}.findByPrimaryKey(${makeArgsWithoutTypes(primaryKeyColumns)}).map { obj =>
       Ok(views.html.${viewsPackage}.editForm(${formName}.fill(obj)${formOptions}))
   }.getOrElse(NotFound)
 }""".trim()
@@ -168,7 +176,7 @@ def delete${junctionTableInfo.nameCamelCased}(${idColumns}) = Action {
     if(childsData.isEmpty){
       ""
     } else {
-      ", " + childsData.map(_._1.toCamelCase.uncapitalize + "s").mkString(", ")
+      ", " + childsData.map(data => data._1.nameCamelCasedUncapitalized + "sBy" + makeColumnsAndString(data._2.referencingColumns)).mkString(", ")
     }
   }
 
