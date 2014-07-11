@@ -2,7 +2,7 @@ package generators.views
 
 import generators.utils.{TableInfo, ForeignKeyInfo, GeneratorHelpers}
 
-import scala.slick.model.{Column, Table}
+import scala.slick.model.{ForeignKey, Column, Table}
 
 class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends ViewHelpers with GeneratorHelpers {
 
@@ -10,7 +10,7 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
 
   val columns: Seq[Column] = mainTableInfo.columns
 
-  val tableName = mainTableInfo.name
+  val tableName = mainTableInfo.nameCamelCasedUncapitalized
 
   val foreignKeys = mainTableInfo.foreignKeys
 
@@ -20,19 +20,27 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
 
   val controllerName = mainTableInfo.controllerName
 
-  val primaryKeyName = mainTableInfo.primaryKeyName
+  val primaryKeyColumns: Seq[Column] = mainTableInfo.primaryKeyColumns
 
-  val childsTables : Seq[TableInfo] = foreignKeyInfo.foreignKeysReferencedTables(table.name).map{ fk =>
+  val buttonsArgs = primaryKeyColumns.map(col => tableName + "." + standardColumnName(col.name)).mkString(", ")
+
+  val childsTables : Seq[(TableInfo, ForeignKey)] = foreignKeyInfo.foreignKeysReferencedTables(table.name).map{ fk =>
     val childTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
-    if(childTableInfo.isJunctionTable) {
+    if(childTableInfo.isJunctionTable || childTableInfo.isSimpleJunctionTable) {
       val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
       val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
       val tableSecondSideInfo = new TableInfo(tableSecondSide)
-      tableSecondSideInfo
-    } else childTableInfo
+      (tableSecondSideInfo, fk)
+    } else (childTableInfo, fk)
   }
 
-  val childsViewArgs : Seq[(String, String)] = childsTables.map(table => (table.listName, s"List[Tables.${table.tableRowName}]"))
+  val childsViewArgs : Seq[(String, String)] = childsTables.map{ table =>
+    val tabInfo = table._1
+
+    val listName = tabInfo.nameCamelCasedUncapitalized + "sBy" + makeColumnsAndString(table._2.referencingColumns)
+
+    (listName, s"List[Tables.${tabInfo.tableRowName}]")
+  }
 
   override val arguments = Seq((tableName, "Tables." + tableRowName)) ++ childsViewArgs
 
@@ -123,8 +131,8 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
     s"""
 <div class="pull-right btn-group">
   <a href="@routes.${controllerName}.list" class="btn btn-success btn-xs">List</a>
-  <a href="@routes.${controllerName}.edit(${tableName}.${primaryKeyName})" class="btn btn-warning btn-xs">Edit</a>
-  <a href="@routes.${controllerName}.delete(${tableName}.${primaryKeyName})" class="btn btn-danger btn-xs">Delete</a>
+  <a href="@routes.${controllerName}.edit(${buttonsArgs})" class="btn btn-warning btn-xs">Edit</a>
+  <a href="@routes.${controllerName}.delete(${buttonsArgs})" class="btn btn-danger btn-xs">Delete</a>
 </div>
 """.trim()
   }
@@ -132,21 +140,29 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
   def childs = {
     foreignKeyInfo.foreignKeysReferencedTables(table.name).map{ fk =>
         val childTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
-        if(childTableInfo.isJunctionTable) {
+        if(childTableInfo.isJunctionTable || childTableInfo.isSimpleJunctionTable) {
           val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
           val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
           val tableSecondSideInfo = new TableInfo(tableSecondSide)
-          printJunctionChild(childTableInfo, tableSecondSideInfo)
-        } else printChild(childTableInfo)
+          if(childTableInfo.isSimpleJunctionTable) printJunctionChild(childTableInfo, tableSecondSideInfo, fk)
+          else printChild(tableSecondSideInfo, fk)
+        }
+        else printChild(childTableInfo, fk)
       }.mkString("\n")
   }
 
-  def printChild(tableInfo : TableInfo) = {
+  def printChild(tableInfo : TableInfo, foreignKey : ForeignKey) = {
+
+    val childTableName = tableInfo.nameCamelCasedUncapitalized
+
+    val childListName = childTableName + "sBy" + makeColumnsAndString(foreignKey.referencingColumns)
+
+    val showArgs = tableInfo.primaryKeyColumns.map(col => childTableName + "." + standardColumnName(col.name)).mkString(", ")
 
     s"""
 <div class="panel panel-info">
     <div class="panel-heading">
-        <h3 class="panel-title">${tableInfo.listName.toUpperCase}</h3>
+        <h3 class="panel-title">${tableInfo.listName.toUpperCase} by ${makeColumnsAndString(foreignKey.referencingColumns)}</h3>
     </div>
     <div class="panel-body">
         <table class="table table-hover table-bordered table-responsive table-middle">
@@ -154,11 +170,11 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
             ${headers(tableInfo.listColumns)}
             </thead>
             <tbody>
-            @for(${tableInfo.name} <- ${tableInfo.listName}) {
+            @for(${childTableName} <- ${childListName}) {
             <tr>
-                ${childFields(tableInfo.name, tableInfo.listColumns)}
+                ${childFields(childTableName, tableInfo.listColumns)}
                 <td class="text-center">
-                    <a href="@routes.${tableInfo.controllerName}.show(${tableInfo.name}.${tableInfo.primaryKeyName})" class="btn btn-info btn-sm">Show</a>
+                    <a href="@routes.${tableInfo.controllerName}.show(${showArgs})" class="btn btn-info btn-sm">Show</a>
                 </td>
             </tr>
             }
@@ -170,11 +186,17 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
 """.trim()
   }
   
-  def printJunctionChild(junctionTableInfo : TableInfo, referencedTableInfo : TableInfo) = {
+  def printJunctionChild(junctionTableInfo : TableInfo, referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
+
+    val referencedTableName = referencedTableInfo.nameCamelCasedUncapitalized
+
+    val childListName = referencedTableName + "sBy" + makeColumnsAndString(foreignKey.referencingColumns)
+
+    val showArgs = referencedTableInfo.primaryKeyColumns.map(col => referencedTableName + "." + standardColumnName(col.name)).mkString(", ")
 
     val deleteArgs = junctionTableInfo.foreignKeys.map{ fk =>
       if(fk.referencedTable.table.equals(referencedTableInfo.table.name.table)) {
-        fk.referencedColumns.map(col => referencedTableInfo.name + "." + standardColumnName(col.name))
+        fk.referencedColumns.map(col => referencedTableName + "." + standardColumnName(col.name))
       }
       else fk.referencedColumns.map(col => tableName + "." + standardColumnName(col.name))
     }.flatten.mkString(", ")
@@ -182,7 +204,7 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
     s"""
 <div class="panel panel-info">
     <div class="panel-heading">
-        <h3 class="panel-title">${referencedTableInfo.listName.toUpperCase}</h3>
+        <h3 class="panel-title">${referencedTableInfo.listName.toUpperCase} by ${makeColumnsAndString(foreignKey.referencingColumns)}</h3>
     </div>
     <div class="panel-body">
         <table class="table table-hover table-bordered table-responsive table-middle">
@@ -190,11 +212,11 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
             ${headers(referencedTableInfo.listColumns)}
             </thead>
             <tbody>
-            @for(${referencedTableInfo.name} <- ${referencedTableInfo.listName}) {
+            @for(${referencedTableName} <- ${childListName}) {
             <tr>
-                ${childFields(referencedTableInfo.name, referencedTableInfo.listColumns)}
+                ${childFields(referencedTableName, referencedTableInfo.listColumns)}
                 <td class="text-center">
-                    <a href="@routes.${referencedTableInfo.controllerName}.show(${referencedTableInfo.name}.${referencedTableInfo.primaryKeyName})" class="btn btn-info btn-sm">Show</a>
+                    <a href="@routes.${referencedTableInfo.controllerName}.show(${showArgs})" class="btn btn-info btn-sm">Show</a>
                     <a href="@routes.${controllerName}.delete${junctionTableInfo.nameCamelCased}(${deleteArgs})" class="btn btn-danger btn-sm">Delete</a>
                 </td>
             </tr>

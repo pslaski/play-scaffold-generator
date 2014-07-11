@@ -2,7 +2,7 @@ package generators.views
 
 import generators.utils.GeneratorHelpers
 
-import scala.slick.model.Column
+import scala.slick.model.{ForeignKey, Column}
 
 trait FormViewGeneratorHelpers extends GeneratorHelpers{
 
@@ -16,11 +16,9 @@ trait FormViewGeneratorHelpers extends GeneratorHelpers{
 
   val formAction : String
 
-  val primaryKeyName : String
+  val autoIncDefaultValue : String = "@value"
 
-  val primaryKeyDefaultValue : String = "@value"
-
-  val foreignKeys : Seq[(String, String)]
+  val foreignKeys : Seq[ForeignKey]
 
   def form = {
     s"""
@@ -46,12 +44,18 @@ ${actions}
   }
 
   def formField(column : Column) = {
-    if(standardColumnName(column.name).equals(primaryKeyName)){
-      inputPrimaryKeyCode(standardColumnName(column.name))
+    if(isAutoIncColumn(column)){
+      inputAutoIncFieldCode(standardColumnName(column.name))
     }
-    else if(foreignKeys.exists(_._1.equals(column.name))){
-      if(column.nullable) selectOptionalCode(standardColumnName(column.name), foreignKeys.find(_._1.equals(column.name)).get._2)
-      else selectCode(standardColumnName(column.name), foreignKeys.find(_._1.equals(column.name)).get._2)
+    else if(foreignKeys.exists(_.referencingColumns.head.name.equals(column.name))){
+      val fk = foreignKeys.find(_.referencingColumns.head.name.equals(column.name)).get
+      val formOptionsName = fk.referencedTable.table.toCamelCase.uncapitalize + "OptionsBy" + makeColumnsAndString(fk.referencedColumns)
+      if(column.nullable) {
+        selectOptionalCode(standardColumnName(column.name), formOptionsName)
+      }
+      else {
+        selectCode(standardColumnName(column.name), formOptionsName)
+      }
     }
     else {
       convertTypeToInput(column)
@@ -75,10 +79,10 @@ ${actions}
     s"""@inputText(${formName}("${fieldName}"), '_label -> "${fieldName}", 'class -> "form-control")"""
   }
 
-  def inputPrimaryKeyCode(fieldName : String) = {
+  def inputAutoIncFieldCode(fieldName : String) = {
     s"""
 @input(${formName}("${fieldName}"), '_label -> None, '_showConstraints -> false) { (id, name, value, args) =>
-    <input type="hidden" name="@name" id="@id" value="${primaryKeyDefaultValue}" @toHtmlArgs(args)>
+    <input type="hidden" name="@name" id="@id" value="${autoIncDefaultValue}" @toHtmlArgs(args)>
 }""".trim()
     }
 
@@ -109,11 +113,11 @@ ${actions}
   }
 
   def selectCode(fieldName : String, optionsName : String) = {
-    s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}", 'class -> "form-control")"""
+    s"""@select(${formName}("${fieldName}"), ${optionsName}, '_label -> "${fieldName}", 'class -> "form-control")"""
   }
 
   def selectOptionalCode(fieldName : String, optionsName : String) = {
-    s"""@select(${formName}("${fieldName}"), ${optionsName}Options, '_label -> "${fieldName}", '_default -> "--${fieldName}--", 'class -> "form-control")"""
+    s"""@select(${formName}("${fieldName}"), ${optionsName}, '_label -> "${fieldName}", '_default -> "--${fieldName}--", 'class -> "form-control")"""
   }
 
   def actions = {

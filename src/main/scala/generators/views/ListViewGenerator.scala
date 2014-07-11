@@ -10,7 +10,7 @@ class ListViewGenerator(table : Table) extends ViewHelpers with GeneratorHelpers
 
   val columns: Seq[Column] = tableInfo.listColumns
 
-  val tableName = tableInfo.name
+  val tableName = tableInfo.nameCamelCasedUncapitalized
 
   override val title: String = tableName + " list"
 
@@ -20,7 +20,9 @@ class ListViewGenerator(table : Table) extends ViewHelpers with GeneratorHelpers
 
   val controllerName = tableInfo.controllerName
 
-  val primaryKeyName = tableInfo.primaryKeyName
+  val primaryKeyColumns: Seq[Column] = tableInfo.primaryKeyColumns
+
+  val buttonsArgs = primaryKeyColumns.map(col => tableName + "." + standardColumnName(col.name)).mkString(", ")
 
   override val arguments = Seq((listName, "List[Tables." + tableRowName + "]"))
 
@@ -83,9 +85,9 @@ class ListViewGenerator(table : Table) extends ViewHelpers with GeneratorHelpers
   def buttons = {
     s"""
 <div class="btn-group">
-  <a href="@routes.${controllerName}.show(${tableName}.${primaryKeyName})" class="btn btn-success">Show</a>
-  <a href="@routes.${controllerName}.edit(${tableName}.${primaryKeyName})" class="btn btn-warning">Edit</a>
-  <a href="@routes.${controllerName}.delete(${tableName}.${primaryKeyName})" class="btn btn-danger">Delete</a>
+  <a href="@routes.${controllerName}.show(${buttonsArgs})" class="btn btn-success">Show</a>
+  <a href="@routes.${controllerName}.edit(${buttonsArgs})" class="btn btn-warning">Edit</a>
+  <a href="@routes.${controllerName}.delete(${buttonsArgs})" class="btn btn-danger">Delete</a>
 </div>
 """.trim()
   }

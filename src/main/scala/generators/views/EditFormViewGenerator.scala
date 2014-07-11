@@ -2,7 +2,7 @@ package generators.views
 
 import generators.utils.TableInfo
 
-import scala.slick.model.{Column, Table}
+import scala.slick.model.{ForeignKey, Column, Table}
 
 class EditFormViewGenerator(table : Table) extends ViewHelpers with FormViewGeneratorHelpers {
 
@@ -10,7 +10,7 @@ class EditFormViewGenerator(table : Table) extends ViewHelpers with FormViewGene
 
   override val columns: Seq[Column] = tableInfo.columns
 
-  val tableName = tableInfo.name
+  val tableName = tableInfo.nameCamelCasedUncapitalized
 
   override val title: String = "Edit " + tableName
 
@@ -20,17 +20,18 @@ class EditFormViewGenerator(table : Table) extends ViewHelpers with FormViewGene
 
   val controllerName = tableInfo.controllerName
 
-  override val primaryKeyName: String = tableInfo.primaryKeyName
-
   override val submitButtonText: String = "Update"
 
   override val formAction: String = "update"
 
-  override val foreignKeys: Seq[(String, String)] = tableInfo.foreignKeys.map { fk =>
-    (fk.referencingColumns.head.name, fk.referencedTable.table.toCamelCase.uncapitalize)
-  }
+  override val foreignKeys: Seq[ForeignKey] = tableInfo.foreignKeys
 
-  val selectFormOptionsArgs : Seq[(String, String)] = foreignKeys.map( fk => ( fk._2 + "Options", "Seq[(String, String)]"))
+  val selectFormOptionsArgs : Seq[(String, String)] = {
+    foreignKeys.map(fk => (fk.referencedTable, fk.referencedColumns)).distinct.map{ tup =>
+      val optName = tup._1.table.toCamelCase.uncapitalize + "OptionsBy" + makeColumnsAndString(tup._2)
+      (optName, "Seq[(String, String)]")
+    }
+  }
 
   override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]")) ++ selectFormOptionsArgs
 

@@ -24,7 +24,7 @@ object ViewGenerator {
       val outputPkg = pkg + "." + table.name.table.toLowerCase
       val tableInfo = new TableInfo(table)
 
-      if(tableInfo.isJunctionTable) new JunctionViewGenerator(table, outputFolder, outputPkg).generate
+      if(tableInfo.isSimpleJunctionTable) new JunctionViewGenerator(table, outputFolder, outputPkg).generate
       else new FullViewGenerator(table, foreignKeyInfo, outputFolder, outputPkg).generate
     }
   }

@@ -2,7 +2,7 @@ package generators.views
 
 import generators.utils.TableInfo
 
-import scala.slick.model.{Column, Table}
+import scala.slick.model.{ForeignKey, Column, Table}
 
 class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGeneratorHelpers{
 
@@ -10,7 +10,7 @@ class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGe
 
   override val columns: Seq[Column] = tableInfo.columns
 
-  val tableName = tableInfo.name
+  val tableName = tableInfo.nameCamelCasedUncapitalized
 
   override val title: String = "Add new " + tableName
 
@@ -24,17 +24,18 @@ class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGe
 
   override val formAction: String = "save"
 
-  override val foreignKeys: Seq[(String, String)] = tableInfo.foreignKeys.map { fk =>
-    (fk.referencingColumns.head.name, fk.referencedTable.table.toCamelCase.uncapitalize)
-  }
+  override val foreignKeys: Seq[ForeignKey] = tableInfo.foreignKeys
 
-  val selectFormOptionsArgs : Seq[(String, String)] = foreignKeys.map( fk => ( fk._2 + "Options", "Seq[(String, String)]"))
+  val selectFormOptionsArgs: Seq[(String, String)] = {
+    foreignKeys.map(fk => (fk.referencedTable, fk.referencedColumns)).distinct.map{ tup =>
+      val optName = tup._1.table.toCamelCase.uncapitalize + "OptionsBy" + makeColumnsAndString(tup._2)
+      (optName, "Seq[(String, String)]")
+    }
+  }
 
   override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]")) ++ selectFormOptionsArgs
 
-  override val primaryKeyName: String = tableInfo.primaryKeyName
-
-  override val primaryKeyDefaultValue = "0"
+  override val autoIncDefaultValue = "0"
 
   override def imports: String = {
     Seq(importCodeView("helper._"),

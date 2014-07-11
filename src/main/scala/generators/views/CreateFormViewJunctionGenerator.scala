@@ -2,7 +2,7 @@ package generators.views
 
 import generators.utils.TableInfo
 
-import scala.slick.model.{Column, Table}
+import scala.slick.model.{ForeignKey, Column, Table}
 
 class CreateFormViewJunctionGenerator(table : Table) extends ViewHelpers with FormViewGeneratorHelpers{
 
@@ -10,7 +10,7 @@ class CreateFormViewJunctionGenerator(table : Table) extends ViewHelpers with Fo
 
   override val columns: Seq[Column] = tableInfo.columns
 
-  val tableName = tableInfo.name
+  val tableName = tableInfo.nameCamelCasedUncapitalized
 
   override val title: String = "Add new " + tableName
 
@@ -24,19 +24,20 @@ class CreateFormViewJunctionGenerator(table : Table) extends ViewHelpers with Fo
 
   override val formAction: String = "save"
 
-  override val foreignKeys: Seq[(String, String)] = tableInfo.foreignKeys.map { fk =>
-    (fk.referencingColumns.head.name, fk.referencedTable.table.toCamelCase.uncapitalize)
-  }
+  override val foreignKeys: Seq[ForeignKey] = tableInfo.foreignKeys
 
-  val selectFormOptionsArgs : Seq[(String, String)] = foreignKeys.map( fk => ( fk._2 + "Options", "Seq[(String, String)]"))
+  val selectFormOptionsArgs : Seq[(String, String)] = {
+    foreignKeys.map(fk => (fk.referencedTable, fk.referencedColumns)).distinct.map{ tup =>
+      val optName = tup._1.table.toCamelCase.uncapitalize + "OptionsBy" + makeColumnsAndString(tup._2)
+      (optName, "Seq[(String, String)]")
+    }
+  }
 
   override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]")) ++ selectFormOptionsArgs
 
   override def viewArguments = super.viewArguments + "(implicit flash: Flash)"
 
-  override val primaryKeyName: String = tableInfo.primaryKeyName
-
-  override val primaryKeyDefaultValue = "0"
+  override val autoIncDefaultValue = "0"
 
   override def imports: String = {
     Seq(importCodeView("helper._"),
@@ -60,15 +61,6 @@ class CreateFormViewJunctionGenerator(table : Table) extends ViewHelpers with Fo
     </div>
 </div>
 """.trim()
-  }
-
-  override def formField(column : Column) = {
-    if(foreignKeys.exists(_._1.equals(column.name))){
-      selectCode(column.name.toLowerCase, foreignKeys.find(_._1.equals(column.name)).get._2)
-    }
-    else {
-      convertTypeToInput(column)
-    }
   }
 
   override def actions = {

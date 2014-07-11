@@ -21,7 +21,7 @@ class MainLayoutViewGenerator(model : Model) extends OutputHelpers with StringUt
 
   def menuRows = {
     tablesInfo.map { tabInfo =>
-      if(tabInfo.isJunctionTable) s"""<li><a href="@routes.${tabInfo.controllerName}.create">${tabInfo.nameCamelCased}</a></li>"""
+      if(tabInfo.isSimpleJunctionTable) s"""<li><a href="@routes.${tabInfo.controllerName}.create">${tabInfo.nameCamelCased}</a></li>"""
       else s"""<li><a href="@routes.${tabInfo.controllerName}.list">${tabInfo.nameCamelCased}</a></li>"""
     }.mkString("\n")
   }
