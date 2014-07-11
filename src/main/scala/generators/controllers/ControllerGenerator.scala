@@ -106,7 +106,13 @@ object ${objectName} extends Controller {
   }
   
   def methodsForSimpleTable = {
+
+    val columnsReferenced = foreignKeyInfo.foreignKeysReferencedTable(table.name).map(_.referencedColumns).distinct
+
+    val uniqueShowByMethods = columnsReferenced.filterNot(_.equals(primaryKeyColumns)).map(cols => showUniqueMethod(cols))
+
     val childTablesInfo = foreignKeyInfo.parentChildrenTablesInfo(table.name)
+
     val deleteJunctionMethods = childTablesInfo.filter(_.isSimpleJunctionTable).map(deleteSimpleJunctionMethod(_))
 
     Seq(indexMethod,
@@ -116,7 +122,7 @@ object ${objectName} extends Controller {
       showMethod,
       editMethod,
       updateMethod,
-      deleteMethod) ++ deleteJunctionMethods
+      deleteMethod) ++ uniqueShowByMethods ++ deleteJunctionMethods
   }
   
   def methodsForSimpleJunctionTable = Seq(indexJunctionMethod,

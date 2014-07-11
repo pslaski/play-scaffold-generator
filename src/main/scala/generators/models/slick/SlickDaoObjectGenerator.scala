@@ -107,7 +107,13 @@ ${methods}
 
     val tableChildrenInfo = foreignKeyInfo.parentChildrenTablesInfo(table.name)
 
-    val formOptions = foreignKeyInfo.foreignKeysReferencedTable(table.name).map(_.referencedColumns.head).distinct.map(col => formOptionsMethodCode(standardColumnName(col.name)))
+    val columnsReferenced = foreignKeyInfo.foreignKeysReferencedTable(table.name).map(_.referencedColumns).distinct
+
+    val formOptions = columnsReferenced.map(cols => formOptionsMethodCode(standardColumnName(cols.head.name)))
+
+    val uniqueFindByMethods = columnsReferenced.filterNot(_.equals(primaryKeyColumns)).map(cols => Seq(findByQueryMethodCode(cols),
+              findByUniqueMethodCode(cols),
+              deleteByMethodCode(cols))).flatten
 
     val findByMethods = table.foreignKeys.map { fk =>
       val columns = fk.referencingColumns
@@ -123,7 +129,7 @@ ${methods}
       findByJunctionTableMethodsCode(childTableInfo, foreignKeyToFirstSide, foreignKeyToSecondSide)
     }
 
-    formOptions ++ findByMethods ++ joinedByJunctionTableMethods
+    formOptions ++ uniqueFindByMethods ++ findByMethods ++ joinedByJunctionTableMethods
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {

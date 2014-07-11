@@ -52,7 +52,7 @@ def create = Action { implicit request =>
 
   def saveMethod = {
 
-    val showArgs = primaryKeyColumns.map(col => "row." + standardColumnName(col.name)).mkString(", ")
+    val showArgs = makeArgsWithObjectWithoutTypes("row", primaryKeyColumns)
 
     s"""
 def save = Action { implicit request =>
@@ -108,9 +108,28 @@ def show(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
 
     val findMethod = makeFindByMethodName(fk.referencingColumns)
 
-    val findMethodArgs = fk.referencedColumns.map(col => "obj." + standardColumnName(col.name)).mkString(", ")
+    val findMethodArgs = makeArgsWithObjectWithoutTypes("obj", fk.referencedColumns)
 
     s"val ${childName} = ${child.daoObjectName}.${findMethod}(${findMethodArgs})"
+  }
+
+  def showUniqueMethod(columns : Seq[Column]) = {
+
+    val showByMethodName = makeShowByMethodName(columns)
+
+    val findByMethodName = makeFindByMethodName(columns)
+
+    val showArgs = makeArgsWithObjectWithoutTypes("obj", primaryKeyColumns)
+
+    s"""
+def ${showByMethodName}(${makeArgsWithTypes(columns)}) = Action {
+  ${daoObjectName}.${findByMethodName}(${makeArgsWithoutTypes(columns)}).fold(
+    BadRequest("Not existed")
+  ){
+    obj => Redirect(routes.${controllerName}.show(${showArgs}))
+  }
+}
+""".trim()
   }
 
   def editMethod = {
@@ -124,7 +143,7 @@ def edit(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
 
   def updateMethod = {
 
-    val showArgs = primaryKeyColumns.map(col => standardColumnName(col.name)).map("formData." + _).mkString(", ")
+    val showArgs = makeArgsWithObjectWithoutTypes("formData", primaryKeyColumns)
 
     s"""
 def update = Action { implicit request =>
@@ -151,12 +170,12 @@ def delete(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
   def deleteSimpleJunctionMethod(junctionTableInfo : TableInfo) = {
 
     val idColumns = junctionTableInfo.foreignKeys.map{ fk =>
-      fk.referencingColumns.map( col => col.name + " : " + col.tpe)
-    }.flatten.mkString(", ")
+      makeArgsWithTypes(fk.referencingColumns)
+    }.mkString(", ")
 
     val deleteArgs = junctionTableInfo.foreignKeys.map{ fk =>
-      fk.referencingColumns.map(_.name)
-    }.flatten.mkString(", ")
+      makeArgsWithoutTypes(fk.referencingColumns)
+    }.mkString(", ")
 
     val parentPk = junctionTableInfo.foreignKeys.filter(_.referencedTable.table.equals(tableName)).head.referencingColumns.head.name
 

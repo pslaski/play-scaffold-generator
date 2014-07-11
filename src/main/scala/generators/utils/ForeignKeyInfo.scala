@@ -27,7 +27,5 @@ class ForeignKeyInfo(model : Model) {
     (table.name, children)
   }).toMap
 
-  def findForeignKeyBetween(parent : QualifiedName, child : QualifiedName) = foreignKeysReferencedTable(parent).find(_.referencingTable == child)
-
 }
 

@@ -50,6 +50,11 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extend
     }
 
   lazy val routesForSimpleTable = {
+
+    val columnsReferenced = foreignKeyInfo.foreignKeysReferencedTable(table.name).map(_.referencedColumns).distinct
+
+    val uniqueShowByRoutes = columnsReferenced.filterNot(_.equals(primaryKeyColumns)).map(cols => showByRoute(cols))
+
     val deleteJunctionsRoutes = foreignKeyInfo.parentChildrenTablesInfo(table.name).filter(_.isSimpleJunctionTable).map(deleteJunctionRoute(_))
 
     Seq(comment,
@@ -60,7 +65,7 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extend
         editRoute,
         updateRoute,
         showRoute,
-        deleteRoute) ++ deleteJunctionsRoutes
+        deleteRoute) ++ uniqueShowByRoutes ++ deleteJunctionsRoutes
   }
 
   lazy val routesForSimpleJunctionTable = {
@@ -72,9 +77,11 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extend
 
   val tableUrl = tableInfo.name + "s"
 
-  lazy val urlArgs = {
-    if(primaryKeyColumns.length == 1){
-      ":" + standardColumnName(primaryKeyColumns.head.name)
+  lazy val urlArgs = makeUrlArgs(primaryKeyColumns)
+
+  private def makeUrlArgs(columns : Seq[Column]) = {
+    if(columns.length == 1){
+      ":" + standardColumnName(columns.head.name)
     } else ""
   }
 
@@ -118,6 +125,17 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extend
 
   def deleteRoute = {
     s"GET${separator}/${tableUrl}/delete/${urlArgs}${separator}controllers.${controllerName}.delete(${methodArgs})"
+  }
+
+  def showByRoute(columns : Seq[Column]) = {
+
+    val showByMethodName = makeShowByMethodName(columns)
+
+    val showUrlArgs = makeUrlArgs(columns)
+
+    val showMethodArgs = makeArgsWithTypes(columns)
+
+    s"GET${separator}/${tableUrl}/${showByMethodName}/${showUrlArgs}${separator}controllers.${controllerName}.${showByMethodName}(${showMethodArgs})"
   }
 
   def deleteJunctionRoute(tabInfo : TableInfo) = {

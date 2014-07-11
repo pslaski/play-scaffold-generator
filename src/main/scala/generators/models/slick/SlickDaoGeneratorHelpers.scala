@@ -169,6 +169,23 @@ def ${methodName}(${args}) : List[${tableRowName}] = {
 """.trim()
   }
 
+  def findByUniqueMethodCode(columns : Seq[Column]) = {
+
+    val args = makeArgsWithTypes(columns)
+
+    val methodName = makeFindByMethodName(columns)
+
+    val compiledName = makeFindByQueryCompiledMethodName(columns)
+
+    val compiledArgs = makeArgsWithoutTypes(columns)
+
+  s"""
+def ${methodName}(${args}) : Option[${tableRowName}] = {
+  ${compiledName}(${compiledArgs}).firstOption
+}
+""".trim()
+  }
+
   def deleteByMethodCode(columns : Seq[Column]) = {
 
     val args = makeArgsWithTypes(columns)

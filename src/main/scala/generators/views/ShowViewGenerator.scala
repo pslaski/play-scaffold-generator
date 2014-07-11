@@ -69,8 +69,9 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
     (columns map {col =>
       if(col.nullable) {
         if(isColumnForeignKey(col)){
-          val parentTableInfo = new TableInfo(foreignKeyInfo.tablesByName(foreignKeys.find(_.referencingColumns.head.name.equals(col.name)).get.referencedTable))
-          printOptionalForeignKeyField(parentTableInfo.nameCamelCased, parentTableInfo.controllerName, standardColumnName(col.name))
+          val fk = foreignKeys.find(_.referencingColumns.head.name.equals(col.name)).get
+          val parentTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable))
+          printOptionalForeignKeyField(parentTableInfo, fk)
         }
         else {
           printField(col.name, printOptionalFieldValue(standardColumnName(col.name)))
@@ -78,8 +79,9 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
       }
       else {
         if(isColumnForeignKey(col)) {
-          val parentTableInfo = new TableInfo(foreignKeyInfo.tablesByName(foreignKeys.find(_.referencingColumns.head.name.equals(col.name)).get.referencedTable))
-          printField(parentTableInfo.nameCamelCased, printForeignKeyFieldValue(parentTableInfo.controllerName, standardColumnName(col.name)))
+          val fk = foreignKeys.find(_.referencingColumns.head.name.equals(col.name)).get
+          val parentTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable))
+          printField(parentTableInfo.nameCamelCased, printForeignKeyFieldValue(parentTableInfo, fk))
         }
         else printField(col.name, printStandardFieldValue(standardColumnName(col.name)))
       }
@@ -111,19 +113,35 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
 """.trim()
   }
 
-  def printOptionalForeignKeyField(parentName: String, parentControllerName : String, foreignKey : String) = {
+  def printOptionalForeignKeyField(parentInfo : TableInfo, foreignKey : ForeignKey) = {
+
+    val foreignKeyField = standardColumnName(foreignKey.referencingColumns.head.name)
+
+    val showMethodName = if(parentInfo.primaryKeyColumns.exists(_.equals(foreignKey.referencedColumns.head))) "show"
+                          else makeShowByMethodName(foreignKey.referencedColumns)
+
+    val parentName = parentInfo.nameCamelCased
+
+    val parentControllerName = parentInfo.controllerName
+
     s"""
-@${tableName}.${foreignKey}.map { ${foreignKey} =>
+@${tableName}.${foreignKeyField}.map { ${foreignKeyField} =>
         <div class="show-group">
             <span class="col-sm-2 text-right"><strong>${parentName}:</strong></span>
-            <span class="col-sm-10"><a href="@routes.${parentControllerName}.show(${foreignKey})">@${foreignKey}</a></span>
+            <span class="col-sm-10"><a href="@routes.${parentControllerName}.${showMethodName}(${foreignKeyField})">@${foreignKeyField}</a></span>
         </div>
-        }
+      }
 """.trim()
   }
 
-  def printForeignKeyFieldValue(parentControllerName : String, foreignKey : String) = {
-    s"""<a href="@routes.${parentControllerName}.show(${tableName}.${foreignKey})">@${tableName}.${foreignKey}</a>"""
+  def printForeignKeyFieldValue(parentInfo : TableInfo, foreignKey : ForeignKey) = {
+
+    val foreignKeyField = standardColumnName(foreignKey.referencingColumns.head.name)
+
+    val showMethodName = if(parentInfo.primaryKeyColumns.exists(_.equals(foreignKey.referencedColumns.head))) "show"
+                          else makeShowByMethodName(foreignKey.referencedColumns)
+
+    s"""<a href="@routes.${parentInfo.controllerName}.${showMethodName}(${tableName}.${foreignKeyField})">@${tableName}.${foreignKeyField}</a>"""
   }
 
 

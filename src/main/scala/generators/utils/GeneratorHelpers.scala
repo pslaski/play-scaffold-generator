@@ -23,6 +23,10 @@ trait GeneratorHelpers extends StringUtils {
     standardColumnName(column.name)
   }.mkString(", ")
 
+  def makeArgsWithObjectWithoutTypes(objectName : String, columns : Seq[Column]) : String = columns.map {column =>
+    objectName + "." + standardColumnName(column.name)
+  }.mkString(", ")
+
   def makeRowComparing(columns : Seq[Column]) : String = columns.map { column =>
     val colName = standardColumnName(column.name)
     s"""row.${colName} === ${colName}"""
@@ -36,6 +40,10 @@ trait GeneratorHelpers extends StringUtils {
 
   def makeDeleteByMethodName(columns : Seq[Column]) : String = {
     "deleteBy" + makeColumnsAndString(columns)
+  }
+
+  def makeShowByMethodName(columns : Seq[Column]) : String = {
+    "showBy" + makeColumnsAndString(columns)
   }
 
   def makeFindByQueryMethodName(columns : Seq[Column]) : String = {
