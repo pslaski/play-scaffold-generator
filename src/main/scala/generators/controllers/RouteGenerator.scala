@@ -1,7 +1,7 @@
 package generators.controllers
 
-import generators.utils.{TableInfo, ForeignKeyInfo, OutputHelpers}
-import scala.slick.model.{Model, Table}
+import generators.utils.{GeneratorHelpers, TableInfo, ForeignKeyInfo, OutputHelpers}
+import scala.slick.model.{Column, Model, Table}
 
 class RouteGenerator(model : Model, foreignKeyInfo : ForeignKeyInfo) extends OutputHelpers {
 
@@ -34,13 +34,15 @@ ${routes}
   }
 }
 
-class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) {
+class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends GeneratorHelpers{
 
   val tableInfo = new TableInfo(table)
 
+  val primaryKeyColumns: Seq[Column] = tableInfo.primaryKeyColumns
+
   def routes = {
-      if(tableInfo.isJunctionTable) {
-        routesForJunctionTable.mkString("\n")
+      if(tableInfo.isSimpleJunctionTable) {
+        routesForSimpleJunctionTable.mkString("\n")
       }
       else {
         routesForSimpleTable.mkString("\n")
@@ -48,7 +50,7 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) {
     }
 
   lazy val routesForSimpleTable = {
-    val deleteJunctionsRoutes = foreignKeyInfo.parentChildrenTablesInfo(table.name).filter(_.isJunctionTable).map(deleteJunctionRoute(_))
+    val deleteJunctionsRoutes = foreignKeyInfo.parentChildrenTablesInfo(table.name).filter(_.isSimpleJunctionTable).map(deleteJunctionRoute(_))
 
     Seq(comment,
         indexRoute,
@@ -61,7 +63,7 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) {
         deleteRoute) ++ deleteJunctionsRoutes
   }
 
-  lazy val routesForJunctionTable = {
+  lazy val routesForSimpleJunctionTable = {
     Seq(comment,
         indexRoute,
         createRoute,
@@ -70,9 +72,15 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) {
 
   val tableUrl = tableInfo.name + "s"
 
+  lazy val urlArgs = {
+    if(primaryKeyColumns.length == 1){
+      ":" + standardColumnName(primaryKeyColumns.head.name)
+    } else ""
+  }
+
   val controllerName = tableInfo.controllerName
 
-  val primaryKeyType = tableInfo.primaryKeyType
+  val methodArgs = makeArgsWithTypes(primaryKeyColumns)
 
   val separator = "\t\t"
 
@@ -97,7 +105,7 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) {
   }
 
   def editRoute = {
-    s"GET${separator}/${tableUrl}/edit/:id${separator}controllers.${controllerName}.edit(id: ${primaryKeyType})"
+    s"GET${separator}/${tableUrl}/edit/${urlArgs}${separator}controllers.${controllerName}.edit(${methodArgs})"
   }
 
   def updateRoute = {
@@ -105,11 +113,11 @@ class TableRouteGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) {
   }
 
   def showRoute = {
-    s"GET${separator}/${tableUrl}/show/:id${separator}controllers.${controllerName}.show(id: ${primaryKeyType})"
+    s"GET${separator}/${tableUrl}/show/${urlArgs}${separator}controllers.${controllerName}.show(${methodArgs})"
   }
 
   def deleteRoute = {
-    s"GET${separator}/${tableUrl}/delete/:id${separator}controllers.${controllerName}.delete(id: ${primaryKeyType})"
+    s"GET${separator}/${tableUrl}/delete/${urlArgs}${separator}controllers.${controllerName}.delete(${methodArgs})"
   }
 
   def deleteJunctionRoute(tabInfo : TableInfo) = {

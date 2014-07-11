@@ -44,9 +44,6 @@ class ControllerGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extend
 
   override val viewsPackage = mainTableInfo.viewsPackage
 
-  override val primaryKeyName: String = mainTableInfo.primaryKeyName
-  override val primaryKeyType: String = mainTableInfo.primaryKeyType
-
   override val primaryKeyColumns: Seq[Column] = mainTableInfo.primaryKeyColumns
 
   override val parentDaoObjectsAndReferencedColumn: Seq[(TableInfo, Column)] = {
@@ -110,7 +107,7 @@ object ${objectName} extends Controller {
   
   def methodsForSimpleTable = {
     val childTablesInfo = foreignKeyInfo.parentChildrenTablesInfo(table.name)
-    val deleteJunctionMethods = childTablesInfo.filter(_.isJunctionTable).map(deleteJunctionMethod(_))
+    val deleteJunctionMethods = childTablesInfo.filter(_.isSimpleJunctionTable).map(deleteSimpleJunctionMethod(_))
 
     Seq(indexMethod,
       listMethod,

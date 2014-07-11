@@ -16,10 +16,6 @@ trait ControllerGeneratorHelpers extends GeneratorHelpers{
 
   val formName : String
 
-  val primaryKeyName : String
-
-  val primaryKeyType : String
-
   val primaryKeyColumns : Seq[Column]
 
   val parentDaoObjectsAndReferencedColumn : Seq[(TableInfo, Column)]
@@ -152,7 +148,7 @@ def delete(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
 }""".trim()
   }
 
-  def deleteJunctionMethod(junctionTableInfo : TableInfo) = {
+  def deleteSimpleJunctionMethod(junctionTableInfo : TableInfo) = {
 
     val idColumns = junctionTableInfo.foreignKeys.map{ fk =>
       fk.referencingColumns.map( col => col.name + " : " + col.tpe)
