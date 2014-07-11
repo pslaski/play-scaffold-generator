@@ -22,7 +22,7 @@ class ListViewGenerator(table : Table) extends ViewHelpers with GeneratorHelpers
 
   val primaryKeyColumns: Seq[Column] = tableInfo.primaryKeyColumns
 
-  val buttonsArgs = primaryKeyColumns.map(col => tableName + "." + standardColumnName(col.name)).mkString(", ")
+  val buttonsArgs = makeArgsWithObjectWithoutTypes(tableName, primaryKeyColumns)
 
   override val arguments = Seq((listName, "List[Tables." + tableRowName + "]"))
 

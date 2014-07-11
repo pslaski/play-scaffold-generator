@@ -175,7 +175,7 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
 
     val childListName = childTableName + "sBy" + makeColumnsAndString(foreignKey.referencingColumns)
 
-    val showArgs = tableInfo.primaryKeyColumns.map(col => childTableName + "." + standardColumnName(col.name)).mkString(", ")
+    val showArgs = makeArgsWithObjectWithoutTypes(childTableName, tableInfo.primaryKeyColumns)
 
     s"""
 <div class="panel panel-info">
@@ -210,7 +210,7 @@ class ShowViewGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) extends 
 
     val childListName = referencedTableName + "sBy" + makeColumnsAndString(foreignKey.referencingColumns)
 
-    val showArgs = referencedTableInfo.primaryKeyColumns.map(col => referencedTableName + "." + standardColumnName(col.name)).mkString(", ")
+    val showArgs = makeArgsWithObjectWithoutTypes(referencedTableName, referencedTableInfo.primaryKeyColumns)
 
     val deleteArgs = junctionTableInfo.foreignKeys.map{ fk =>
       if(fk.referencedTable.table.equals(referencedTableInfo.table.name.table)) {

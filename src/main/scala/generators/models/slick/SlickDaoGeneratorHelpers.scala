@@ -92,7 +92,7 @@ def delete(${methodArgs}) = {
 
     val deleteQuery = makeDeleteByMethodName(fk.referencingColumns)
 
-    val queryArgs = fk.referencedColumns.map(col => "obj." + standardColumnName(col.name)).mkString(", ")
+    val queryArgs = makeArgsWithObjectWithoutTypes("obj", fk.referencedColumns)
 
     s"${childTabInfo.daoObjectName}.${deleteQuery}(${queryArgs})"
   }
@@ -100,12 +100,12 @@ def delete(${methodArgs}) = {
   def deleteJunctionMethodCode(foreignKeys : Seq[ForeignKey]) = {
 
     val idColumns = foreignKeys.map{ fk =>
-      fk.referencingColumns.map( col => standardColumnName(col.name) + " : " + col.tpe)
-    }.flatten.mkString(", ")
+      makeArgsWithoutTypes(fk.referencingColumns)
+    }.mkString(", ")
 
     val findingColumns = foreignKeys.map{ fk =>
-      fk.referencingColumns.map(col => "row." + standardColumnName(col.name) + " === " + standardColumnName(col.name))
-    }.flatten.mkString(" && ")
+      makeRowComparing(fk.referencingColumns)
+    }.mkString(" && ")
 
     s"""
 def delete(${idColumns}) = {
@@ -122,10 +122,7 @@ def delete(${idColumns}) = {
 
     val queryName = makeFindByQueryCompiledMethodName(primaryKeyColumns)
 
-    val queryArgs = primaryKeyColumns.map { column =>
-      val colName = standardColumnName(column.name)
-      s"""updatedRow.${colName}"""
-    }.mkString(", ")
+    val queryArgs = makeArgsWithObjectWithoutTypes("updatedRow", primaryKeyColumns)
 
     s"""
 def update(updatedRow: ${tableRowName}) = {
