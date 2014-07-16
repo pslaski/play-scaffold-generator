@@ -75,7 +75,7 @@ object ScaffoldPlugin extends Plugin {
 
     GlobalObjectGenerator.writeToFile(outputDir, "")
 
-    stream.log.info("Generating schema completed....")
+    stream.log.info("Generating Global Object completed....")
 
     SchemaGenerator.generate(outputDir)
 

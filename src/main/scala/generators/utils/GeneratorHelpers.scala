@@ -23,6 +23,10 @@ trait GeneratorHelpers extends StringUtils {
     standardColumnName(column.name)
   }.mkString(", ")
 
+  def makeArgsTypes(columns : Seq[Column]) : String = columns.map {column =>
+    column.tpe
+  }.mkString(", ")
+
   def makeArgsWithObjectWithoutTypes(objectName : String, columns : Seq[Column]) : String = columns.map {column =>
     objectName + "." + standardColumnName(column.name)
   }.mkString(", ")
@@ -53,4 +57,21 @@ trait GeneratorHelpers extends StringUtils {
   def makeFindByQueryCompiledMethodName(columns : Seq[Column]) : String = {
     makeFindByQueryMethodName(columns) + "Compiled"
   }
+
+  def makeCompositeKeyType(columns : Seq[Column]) : String = {
+    if(columns.length == 1) {
+      makeArgsTypes(columns)
+    } else {
+      s"""CompositeKey${columns.length}[${makeArgsTypes(columns)}]"""
+    }
+  }
+
+  def makeCompositeKey(columns : Seq[Column]) : String = {
+    if(columns.length == 1) {
+      standardColumnName(columns.head.name)
+    } else {
+      s"""compositeKey(${makeArgsWithoutTypes(columns)})"""
+    }
+  }
+
 }

@@ -47,7 +47,7 @@ object ${objectName} extends Schema {
   def imports : String = {
     Seq(importCode("org.squeryl.{Schema, KeyedEntity}"),
         importCode("org.squeryl.PrimitiveTypeMode._"),
-        importCode("org.squeryl.dsl.CompositeKey2"),
+        importCode("org.squeryl.dsl._"),
         importCode("org.squeryl.annotations.Column"))
         .mkString("\n")
   }
@@ -64,7 +64,7 @@ object ${objectName} extends Schema {
 
   def relations : String = {
     allTablesInfo.filter(_.foreignKeys.nonEmpty).map{ tableInfo =>
-      if(tableInfo.isJunctionTable) printManyToManyRelation(tableInfo)
+      if(tableInfo.isJunctionTable || tableInfo.isSimpleJunctionTable) printManyToManyRelation(tableInfo)
       else printOneToManyRelations(tableInfo)
     }.mkString("\n\n\t")
   }
@@ -100,13 +100,15 @@ object ${objectName} extends Schema {
 
     val referencedTableInfo = new TableInfo(model.tablesByName(foreignKey.referencedTable))
 
-    val relationName = referencedTableInfo.nameCamelCasedUncapitalized + "To" + referencingTableInfo.nameCamelCased
+    val relationName = referencedTableInfo.nameCamelCasedUncapitalized + "To" + referencingTableInfo.nameCamelCased + "By" + makeColumnsAndString(foreignKey.referencingColumns)
+
+    val referencedColumn = standardColumnName(foreignKey.referencedColumns.head.name)
 
     val referencingColumn = standardColumnName(foreignKey.referencingColumns.head.name)
 
     val referencedValue = {
-      if (foreignKey.referencingColumns.head.nullable) "Option(a.id)"
-      else "a.id"
+      if (foreignKey.referencingColumns.head.nullable) s"Option(a.${referencedColumn})"
+      else "a." + referencedColumn
     }
 
         s"""
@@ -118,19 +120,20 @@ object ${objectName} extends Schema {
 
   def classes = {
     allTablesInfo.map{ tableInfo =>
-      if(tableInfo.isJunctionTable) printJunctionClass(tableInfo)
+      if(tableInfo.isSimpleJunctionTable) printSimpleJunctionClass(tableInfo)
+      else if(tableInfo.isJunctionTable) printJunctionClass(tableInfo)
       else printStandardClass(tableInfo)
     }.mkString("\n\n\t")
   }
 
-  def printJunctionClass(tableInfo : TableInfo) = {
+  def printSimpleJunctionClass(tableInfo : TableInfo) = {
 
     val fkTypes = tableInfo.foreignKeys.map(_.referencingColumns.head.tpe).mkString(", ")
 
     val fkColumns = tableInfo.foreignKeys.map( fk => standardColumnName(fk.referencingColumns.head.name)).mkString(", ")
 
     s"""
-  case class ${tableInfo.tableRowName}(${printJunctionClassColumns(tableInfo)}) extends KeyedEntity[CompositeKey2[${fkTypes}]] {
+  case class ${tableInfo.tableRowName}(${printClassColumns(tableInfo)}) extends KeyedEntity[CompositeKey2[${fkTypes}]] {
 
     override def id = compositeKey(${fkColumns})
 
@@ -139,7 +142,21 @@ object ${objectName} extends Schema {
  """.trim()
   }
 
-  def printJunctionClassColumns(tableInfo : TableInfo) : String = {
+  def printJunctionClass(tableInfo : TableInfo) = {
+
+    val keyedEntityType = makeCompositeKeyType(tableInfo.primaryKeyColumns)
+
+    s"""
+  case class ${tableInfo.tableRowName}(${printClassColumns(tableInfo)}) extends KeyedEntity[${keyedEntityType}] {
+
+    ${printId(tableInfo)}
+
+    ${printConstructor(tableInfo)}
+  }
+ """.trim()
+  }
+
+  def printClassColumns(tableInfo : TableInfo) : String = {
     tableInfo.columns.map(printColumn(_)).mkString(", \n\t\t\t")
   }
 
@@ -177,8 +194,12 @@ object ${objectName} extends Schema {
 
   def printStandardClass(tableInfo : TableInfo) = {
 
+    val keyedEntityType = makeCompositeKeyType(tableInfo.primaryKeyColumns)
+
     s"""
-  case class ${tableInfo.tableRowName}(${printStandardClassColumns(tableInfo)}) extends KeyedEntity[${tableInfo.primaryKeyType}] {
+  case class ${tableInfo.tableRowName}(${printClassColumns(tableInfo)}) extends KeyedEntity[${keyedEntityType}] {
+
+    ${printId(tableInfo)}
 
     ${printConstructor(tableInfo)}
 
@@ -188,39 +209,41 @@ object ${objectName} extends Schema {
  """.trim()
   }
 
-  def printStandardClassColumns(tableInfo : TableInfo) : String = {
-    tableInfo.columns.map{ col =>
-      if(standardColumnName(col.name).equals(tableInfo.primaryKeyName)) printPrimaryKeyColumn(col)
-      else printColumn(col)
-    }.mkString(", \n\t\t\t")
-  }
-
-  def printPrimaryKeyColumn(column : Column) = {
-    s"""@Column("${column.name}") id : ${column.tpe}"""
-  }
-
   def printColumn(column : Column) = {
     if(column.nullable) s"""@Column("${column.name}") ${standardColumnName(column.name)} : Option[${column.tpe}]"""
     else s"""@Column("${column.name}") ${standardColumnName(column.name)} : ${column.tpe}"""
   }
 
-  def printParents(tableInfo : TableInfo) = {
-    tableInfo.foreignKeys.map(fk => printParent(tableInfo, new TableInfo(model.tablesByName(fk.referencedTable)))).mkString("\n\n\t")
+  def printId(tableInfo : TableInfo) : String = {
+
+    val compositeKeyType = makeCompositeKeyType(tableInfo.primaryKeyColumns)
+    val compositeKey = makeCompositeKey(tableInfo.primaryKeyColumns)
+
+    s"""override def id: ${compositeKeyType} = ${compositeKey}"""
   }
 
-  def printParent(referencingTableInfo : TableInfo, referencedTableInfo : TableInfo) = {
+  def printParents(tableInfo : TableInfo) = {
+    tableInfo.foreignKeys.map(fk => printParent(tableInfo, new TableInfo(model.tablesByName(fk.referencedTable)), fk)).mkString("\n\n\t")
+  }
 
-    val relationName = referencedTableInfo.nameCamelCasedUncapitalized + "To" + referencingTableInfo.nameCamelCased
+  def printParent(referencingTableInfo : TableInfo, referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
 
-    s"""lazy val ${referencedTableInfo.nameCamelCasedUncapitalized} = ${relationName}.right(this)"""
+    val parentName = referencedTableInfo.nameCamelCasedUncapitalized + "By" + makeColumnsAndString(foreignKey.referencingColumns)
+
+    val relationName = referencedTableInfo.nameCamelCasedUncapitalized + "To" + referencingTableInfo.nameCamelCased + "By" + makeColumnsAndString(foreignKey.referencingColumns)
+
+    s"""lazy val ${parentName} = ${relationName}.right(this)"""
   }
 
   def printChilds(parentInfo : TableInfo) = {
 
-   foreignKeyInfo.parentChildrenTablesInfo(parentInfo.table.name).map{ childInfo =>
-    if(childInfo.isJunctionTable) printJunctionChild(parentInfo, childInfo)
-    else printChild(childInfo, parentInfo)
+   foreignKeyInfo.foreignKeys.filter(_.referencedTable == parentInfo.table.name).map{fk =>
+    val childInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
+
+    if(childInfo.isJunctionTable || childInfo.isSimpleJunctionTable) printJunctionChild(parentInfo, childInfo)
+    else printChild(childInfo, parentInfo, fk)
    }.mkString("\n\n\t\t")
+
   }
 
   def printJunctionChild(parentTableInfo : TableInfo, junctionTableInfo : TableInfo) = {
@@ -240,11 +263,13 @@ object ${objectName} extends Schema {
     }
   }
 
-  def printChild(referencingTableInfo : TableInfo, referencedTableInfo : TableInfo) = {
+  def printChild(referencingTableInfo : TableInfo, referencedTableInfo : TableInfo, foreignKey : ForeignKey) = {
 
-    val relationName = referencedTableInfo.nameCamelCasedUncapitalized + "To" + referencingTableInfo.nameCamelCased
+    val childName = referencingTableInfo.listName + "By" + makeColumnsAndString(foreignKey.referencingColumns)
 
-    s"""lazy val ${referencingTableInfo.listName} = ${relationName}.left(this)"""
+    val relationName = referencedTableInfo.nameCamelCasedUncapitalized + "To" + referencingTableInfo.nameCamelCased + "By" + makeColumnsAndString(foreignKey.referencingColumns)
+
+    s"""lazy val ${childName} = ${relationName}.left(this)"""
   }
 
 
