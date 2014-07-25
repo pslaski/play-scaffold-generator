@@ -68,16 +68,16 @@ def findByPrimaryKey(${methodArgs}) : Option[${tableRowName}] = {
       if(childData.nonEmpty){
 
 s"""
-   val objOption = findByPrimaryKey(${queryArgs})
+  val objOption = findByPrimaryKey(${queryArgs})
 
-   objOption match {
-     case Some(obj) => {
-       ${childData.map(child => deleteChilds(child._1, child._2)).mkString("\n")}
-     }
-     case None => "Not finded"
-   }
+  objOption match {
+    case Some(obj) => {
+      ${childData.map(child => deleteChilds(child._1, child._2)).mkString("\n\t\t\t")}
+    }
+    case None => "Not finded"
+  }
 
- """.trim()
+""".trim()
       } else ""
     }
 

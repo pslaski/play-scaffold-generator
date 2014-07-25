@@ -70,7 +70,24 @@ def findById(id : ${primaryKeyType}) : Option[${tableRowName}] = {
 
     val queryArgs = makeCompositeKey(primaryKeyColumns)
 
-    val deleteChilds = childData.map(data => deleteChild(data._1, data._2)).mkString("\n")
+    //val deleteChilds = childData.map(data => deleteChild(data._1, data._2)).mkString("\n")
+
+    val deleteChilds = {
+      if(childData.nonEmpty){
+
+s"""
+  val objOption = findByPrimaryKey(${methodArgs})
+
+  objOption match {
+    case Some(obj) => {
+      ${childData.map(data => deleteChild(data._1, data._2)).mkString("\n\t\t\t")}
+    }
+    case None => "Not finded"
+  }
+
+ """.trim()
+      } else ""
+    }
 
     s"""
 def delete(${methodArgs}) = {
@@ -83,7 +100,7 @@ def delete(${methodArgs}) = {
 
     val deleteQuery = makeDeleteByMethodName(fk.referencingColumns)
 
-    val queryArgs = makeArgsWithoutTypes(fk.referencedColumns)
+    val queryArgs = makeArgsWithObjectWithoutTypes("obj", fk.referencedColumns)
 
     s"${childTabInfo.daoObjectName}.${deleteQuery}(${queryArgs})"
   }

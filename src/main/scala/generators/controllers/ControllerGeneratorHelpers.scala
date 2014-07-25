@@ -100,7 +100,7 @@ def show(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
   def childsFinders = {
     childsData.map{ child =>
       childFinder(child._1, child._2)
-    }.mkString("\n")
+    }.mkString("\n\t\t\t")
   }
 
   private def childFinder(child : TableInfo, fk : ForeignKey) = {
