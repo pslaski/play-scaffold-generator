@@ -24,14 +24,6 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
 
   val primaryKeyOpt = columns.find(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey))
 
-  val (primaryKeyName, primaryKeyType) = primaryKeyOpt match {
-        case Some(col) => (standardColumnName(col.name), col.tpe)
-        case None => {
-          val col = columns.head
-          (standardColumnName(col.name), col.tpe)
-        }
-      }
-
   val primaryKeyColumns : Seq[Column]= {
     table.primaryKey match {
       case Some(pk) => pk.columns

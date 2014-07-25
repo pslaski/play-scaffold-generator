@@ -32,9 +32,6 @@ class SquerylDaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) 
 
   override val primaryKeyColumns: Seq[Column] = mainTableInfo.primaryKeyColumns
 
-/*  override val primaryKeyName: String = mainTableInfo.primaryKeyName
-  override val primaryKeyType: String = mainTableInfo.primaryKeyType*/
-
   override val tableRowName: String = mainTableInfo.tableRowName
   override val queryObjectName: String = mainTableInfo.queryObjectName
 
@@ -95,12 +92,6 @@ ${methods}
   }
 
   def dynamicMethods : Seq[String] = {
-    /*if(!mainTableInfo.isSimpleJunctionTable) dynamicMethodsForSimpleTable
-    else Seq.empty*/
-    dynamicMethodsForSimpleTable
-  }
-
-  def dynamicMethodsForSimpleTable : Seq[String] = {
 
     val tableChildrenInfo = foreignKeyInfo.parentChildrenTablesInfo(table.name)
 
@@ -126,20 +117,7 @@ ${methods}
       findByJunctionTableMethodsCode(childTableInfo, foreignKeyToFirstSide, foreignKeyToSecondSide)
     }
 
-/*    val joinedByJunctionTable = tableChildrenInfo.filter(_.isJunctionTable).map{ childTableInfo =>
-      val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
-      val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
-      val tableSecondSideInfo = new TableInfo(tableSecondSide)
-
-      findByForeignKeyMethodCode(tableSecondSideInfo)
-    }
-
-    val joinedByForeignKey = table.foreignKeys.map { fk =>
-      val referencedTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable))
-        findByForeignKeyMethodCode(referencedTableInfo)
-    }*/
-
-    formOptions ++ findByMethods ++ uniqueFindByMethods ++ joinedByJunctionTableMethods//++ joinedByJunctionTable ++ joinedByForeignKey
+    formOptions ++ findByMethods ++ uniqueFindByMethods ++ joinedByJunctionTableMethods
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {

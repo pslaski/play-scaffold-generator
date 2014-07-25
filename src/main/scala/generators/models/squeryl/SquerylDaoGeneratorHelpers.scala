@@ -14,10 +14,6 @@ trait SquerylDaoGeneratorHelpers extends GeneratorHelpers{
 
   val primaryKeyColumns : Seq[Column]
 
-/*  val primaryKeyName : String
-
-  val primaryKeyType : String*/
-
   val queryObjectName : String
 
   val fieldsForSimpleName : Seq[String]
@@ -29,14 +25,6 @@ def save(${rowName}: ${tableRowName}) : ${tableRowName} = {
   inTransaction(${queryObjectName}.insert(${rowName}))
 }""".trim()
   }
-
-/*  def saveJunctionMethodCode = {
-
-    s"""
-def save(${rowName}: ${tableRowName}) = {
-  inTransaction(${queryObjectName}.insert(${rowName}))
-}""".trim()
-  }*/
   
   def findAllMethodCode = {
     s"""
@@ -57,20 +45,11 @@ def findByPrimaryKey(${methodArgs}) : Option[${tableRowName}] = {
 }""".trim()
   }
   
-/*  def findByIdMethodCode = {
-    s"""
-def findById(id : ${primaryKeyType}) : Option[${tableRowName}] = {
-  inTransaction(${queryObjectName}.lookup(id))
-}""".trim()
-  }*/
-  
   def deleteMethodCode(childData : Seq[(TableInfo, ForeignKey)]) = {
 
     val methodArgs = makeArgsWithTypes(primaryKeyColumns)
 
     val queryArgs = makeCompositeKey(primaryKeyColumns)
-
-    //val deleteChilds = childData.map(data => deleteChild(data._1, data._2)).mkString("\n")
 
     val deleteChilds = {
       if(childData.nonEmpty){
@@ -104,22 +83,6 @@ def delete(${methodArgs}) = {
 
     s"${childTabInfo.daoObjectName}.${deleteQuery}(${queryArgs})"
   }
-
-/*  def deleteJunctionMethodCode(foreignKeys : Seq[ForeignKey]) = {
-
-    val idColumns = foreignKeys.map{ fk =>
-      fk.referencingColumns.map( col => standardColumnName(col.name) + " : " + col.tpe)
-    }.flatten.mkString(", ")
-
-    val findingColumns = foreignKeys.map{ fk =>
-      fk.referencingColumns.map(col => standardColumnName(col.name))
-    }.flatten.mkString(", ")
-
-    s"""
-def delete(${idColumns}) = {
-  inTransaction(${queryObjectName}.delete(compositeKey(${findingColumns})))
-}""".trim()
-  }*/
 
   def deleteSimpleJunctionMethodCode(foreignKeys : Seq[ForeignKey]) = {
 
@@ -249,20 +212,6 @@ def ${findByMethodName}(${queryArgs}) : List[${tableRowName}] = {
 }
 """.trim()
   }
-
-/*  def findByForeignKeyMethodCode(referencedTableInfo : TableInfo) = {
-
-    val referencedRow = referencedTableInfo.nameCamelCasedUncapitalized
-
-    val methodName = s"${listName}For${referencedTableInfo.nameCamelCased}"
-
-  s"""
-def ${methodName}(${referencedRow} : ${referencedTableInfo.tableRowName}) : List[${tableRowName}] = {
-  inTransaction(${referencedRow}.${listName}.toList)
-}
-""".trim()
-  }*/
-
 
   def formOptionsMethodCode(colName : String) = {
 
