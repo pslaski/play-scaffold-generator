@@ -77,7 +77,7 @@ ${methods}
   }
 
   def fixedMethodsForTable : Seq[String] = {
-    val cascadeChildData = foreignKeyInfo.foreignKeysReferencedTable(table.name).filter(_.onDelete.action == Restrict.action).map{ fk =>
+    val cascadeChildData = foreignKeyInfo.foreignKeysReferencedTable(table.name).filter(fk => fk.onDelete.action == Restrict.action || fk.onDelete.action == NoAction.action).map{ fk =>
       val tab = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
       (tab, fk)
     }
@@ -109,7 +109,7 @@ ${methods}
 
     val columnsReferenced = foreignKeyInfo.foreignKeysReferencedTable(table.name).map(_.referencedColumns).distinct
 
-    val formOptions = columnsReferenced.map(cols => formOptionsMethodCode(standardColumnName(cols.head.name)))
+    val formOptions = columnsReferenced.map(cols => formOptionsMethodCode(cols.head.name))
 
     val uniqueFindByMethods = columnsReferenced.filterNot(_.equals(primaryKeyColumns)).map(cols => Seq(findByQueryMethodCode(cols),
               findByUniqueMethodCode(cols),

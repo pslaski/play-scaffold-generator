@@ -62,12 +62,14 @@ object ${objectName} extends Schema {
     s"""val ${tableInfo.queryObjectName} = table[${tableInfo.tableRowName}]("${tableInfo.name}")"""
   }
 
-  def relations : String = {
+/*  def relations : String = {
     allTablesInfo.filter(_.foreignKeys.nonEmpty).map{ tableInfo =>
       if(tableInfo.isJunctionTable || tableInfo.isSimpleJunctionTable) printManyToManyRelation(tableInfo)
       else printOneToManyRelations(tableInfo)
     }.mkString("\n\n\t")
-  }
+  }*/
+
+  def relations = ""
 
   def printManyToManyRelation(tableInfo : TableInfo) = {
 
@@ -128,14 +130,12 @@ object ${objectName} extends Schema {
 
   def printSimpleJunctionClass(tableInfo : TableInfo) = {
 
-    val fkTypes = tableInfo.foreignKeys.map(_.referencingColumns.head.tpe).mkString(", ")
+/*    val fkTypes = tableInfo.foreignKeys.map(_.referencingColumns.head.tpe).mkString(", ")
 
-    val fkColumns = tableInfo.foreignKeys.map( fk => standardColumnName(fk.referencingColumns.head.name)).mkString(", ")
+    val fkColumns = tableInfo.foreignKeys.map( fk => standardColumnName(fk.referencingColumns.head.name)).mkString(", ")*/
 
     s"""
-  case class ${tableInfo.tableRowName}(${printClassColumns(tableInfo)}) extends KeyedEntity[CompositeKey2[${fkTypes}]] {
-
-    override def id = compositeKey(${fkColumns})
+  case class ${tableInfo.tableRowName}(${printClassColumns(tableInfo)}) {
 
     ${printConstructor(tableInfo)}
   }
@@ -157,7 +157,12 @@ object ${objectName} extends Schema {
   }
 
   def printClassColumns(tableInfo : TableInfo) : String = {
-    tableInfo.columns.map(printColumn(_)).mkString(", \n\t\t\t")
+    val primaryKeyColumns = tableInfo.primaryKeyColumns
+
+    tableInfo.columns.map{ col =>
+      if(!tableInfo.isSimpleJunctionTable && primaryKeyColumns.length == 1 && col.name.equals(primaryKeyColumns.head.name)) printIdColumn(col)
+      else printColumn(col)
+    }.mkString(", \n\t\t\t")
   }
 
   def printConstructor(tableInfo : TableInfo) : String = {
@@ -203,10 +208,12 @@ object ${objectName} extends Schema {
 
     ${printConstructor(tableInfo)}
 
-    ${printParents(tableInfo)}
-    ${printChilds(tableInfo)}
   }
  """.trim()
+  }
+
+  def printIdColumn(column : Column) = {
+    s"""@Column("${column.name}") id : ${column.tpe}"""
   }
 
   def printColumn(column : Column) = {
@@ -216,10 +223,18 @@ object ${objectName} extends Schema {
 
   def printId(tableInfo : TableInfo) : String = {
 
-    val compositeKeyType = makeCompositeKeyType(tableInfo.primaryKeyColumns)
-    val compositeKey = makeCompositeKey(tableInfo.primaryKeyColumns)
+    val primaryKeyColumns = tableInfo.primaryKeyColumns
 
-    s"""override def id: ${compositeKeyType} = ${compositeKey}"""
+    if(primaryKeyColumns.length == 1){
+      val column = primaryKeyColumns.head
+      s"""def ${standardColumnName(column.name)} : ${column.tpe} = id"""
+    }
+    else {
+      val compositeKeyType = makeCompositeKeyType(primaryKeyColumns)
+      val compositeKey = makeCompositeKey(primaryKeyColumns)
+
+      s"""override def id: ${compositeKeyType} = ${compositeKey}"""
+    }
   }
 
   def printParents(tableInfo : TableInfo) = {

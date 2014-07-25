@@ -31,10 +31,20 @@ trait GeneratorHelpers extends StringUtils {
     objectName + "." + standardColumnName(column.name)
   }.mkString(", ")
 
-  def makeRowComparing(columns : Seq[Column]) : String = columns.map { column =>
+  def makeSlickRowComparing(columns : Seq[Column]) : String = columns.map { column =>
     val colName = standardColumnName(column.name)
     s"""row.${colName} === ${colName}"""
   }.mkString(" && ")
+  
+  def makeSquerylRowComparing(columns : Seq[Column]) : String = columns.map { column =>
+    val colName = standardColumnName(column.name)
+    if(column.tpe.equals("String") && column.nullable){
+      s"""row.${colName} === Some(${colName})"""
+    }
+    else {
+      s"""row.${colName} === ${colName}"""
+    }
+  }.mkString(" and ")
 
   def makeColumnsAndString(columns : Seq[Column]) : String = columns.map(col => standardColumnName(col.name).capitalize).mkString("And")
 

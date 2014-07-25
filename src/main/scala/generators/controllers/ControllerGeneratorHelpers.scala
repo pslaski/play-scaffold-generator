@@ -179,10 +179,12 @@ def delete(${makeArgsWithTypes(primaryKeyColumns)}) = Action {
 
     val parentPk = junctionTableInfo.foreignKeys.filter(_.referencedTable.table.equals(tableName)).head.referencingColumns.head.name
 
+    val parentPkName = standardColumnName(parentPk)
+
     s"""
 def delete${junctionTableInfo.nameCamelCased}(${idColumns}) = Action {
   ${junctionTableInfo.daoObjectName}.delete(${deleteArgs})
-  Redirect(routes.${controllerName}.show(${parentPk}))
+  Redirect(routes.${controllerName}.show(${parentPkName}))
 }
 """.trim()
   }

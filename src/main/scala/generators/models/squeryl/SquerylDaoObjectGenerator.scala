@@ -2,7 +2,8 @@ package generators.models.squeryl
 
 import generators.utils._
 
-import scala.slick.model.Table
+import scala.slick.model.ForeignKeyAction.{NoAction, Restrict}
+import scala.slick.model.{Column, Table}
 
 object SquerylDaoObjectGenerator {
   def generate(outputFolder : String) = {
@@ -29,8 +30,10 @@ class SquerylDaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) 
 
   override val listName : String = mainTableInfo.listName
 
-  override val primaryKeyName: String = mainTableInfo.primaryKeyName
-  override val primaryKeyType: String = mainTableInfo.primaryKeyType
+  override val primaryKeyColumns: Seq[Column] = mainTableInfo.primaryKeyColumns
+
+/*  override val primaryKeyName: String = mainTableInfo.primaryKeyName
+  override val primaryKeyType: String = mainTableInfo.primaryKeyType*/
 
   override val tableRowName: String = mainTableInfo.tableRowName
   override val queryObjectName: String = mainTableInfo.queryObjectName
@@ -38,8 +41,7 @@ class SquerylDaoObjectGenerator(table : Table, foreignKeyInfo : ForeignKeyInfo) 
   val objectName = mainTableInfo.daoObjectName
 
   override val fieldsForSimpleName = mainTableInfo.selectColumns.map{ col =>
-    if(standardColumnName(col.name).equals(primaryKeyName)) "id"
-    else if(col.nullable) standardColumnName(col.name) + ".getOrElse(\"\")"
+    if(col.nullable) standardColumnName(col.name) + ".getOrElse(\"\")"
     else standardColumnName(col.name)
   }
 
@@ -69,34 +71,62 @@ ${methods}
   }
 
   def fixedMethods : Seq[String] = {
-    if(mainTableInfo.isJunctionTable) fixedMethodsForJunctionTable
+    if(mainTableInfo.isSimpleJunctionTable) fixedMethodsForSimpleJunctionTable
     else fixedMethodsForSimpleTable
   }
 
   def fixedMethodsForSimpleTable : Seq[String] = {
+
+    val cascadeChildData = foreignKeyInfo.foreignKeysReferencedTable(table.name).filter(fk => fk.onDelete.action == Restrict.action || fk.onDelete.action == NoAction.action).map{ fk =>
+      val tab = new TableInfo(foreignKeyInfo.tablesByName(fk.referencingTable))
+      (tab, fk)
+    }
+
     Seq(saveMethodCode,
-        findByIdMethodCode,
+        findByPrimaryKeyMethodCode,
         updateMethodCode,
-        deleteMethodCode,
-        findAllMethodCode,
-        formOptionsMethodCode)
+        deleteMethodCode(cascadeChildData),
+        findAllMethodCode)
   }
 
-  def fixedMethodsForJunctionTable: Seq[String] = {
-    Seq(saveJunctionMethodCode,
-        deleteJunctionMethodCode(table.foreignKeys))
+  def fixedMethodsForSimpleJunctionTable: Seq[String] = {
+    Seq(saveMethodCode,
+        deleteSimpleJunctionMethodCode(table.foreignKeys))
   }
 
   def dynamicMethods : Seq[String] = {
-    if(!mainTableInfo.isJunctionTable) dynamicMethodsForSimpleTable
-    else Seq.empty
+    /*if(!mainTableInfo.isSimpleJunctionTable) dynamicMethodsForSimpleTable
+    else Seq.empty*/
+    dynamicMethodsForSimpleTable
   }
 
   def dynamicMethodsForSimpleTable : Seq[String] = {
 
     val tableChildrenInfo = foreignKeyInfo.parentChildrenTablesInfo(table.name)
 
-    val joinedByJunctionTable = tableChildrenInfo.filter(_.isJunctionTable).map{ childTableInfo =>
+    val columnsReferenced = foreignKeyInfo.foreignKeysReferencedTable(table.name).map(_.referencedColumns).distinct
+
+    val formOptions = columnsReferenced.map(cols => formOptionsMethodCode(cols.head.name))
+
+    val uniqueFindByMethods = columnsReferenced.filterNot(_.equals(primaryKeyColumns)).map(cols =>
+          Seq(findByUniqueMethodCode(cols),
+              deleteByMethodCode(cols))).flatten
+
+    val findByMethods = table.foreignKeys.map { fk =>
+      val columns = fk.referencingColumns
+      Seq(findByQueryMethodCode(columns),
+          findByMethodCode(columns),
+          deleteByMethodCode(columns))
+    }.flatten
+
+    val joinedByJunctionTableMethods = tableChildrenInfo.filter(tabInfo => tabInfo.isJunctionTable || tabInfo.isSimpleJunctionTable).map{ childTableInfo =>
+      val foreignKeyToFirstSide = childTableInfo.foreignKeys.filter(_.referencedTable == table.name).head
+      val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
+
+      findByJunctionTableMethodsCode(childTableInfo, foreignKeyToFirstSide, foreignKeyToSecondSide)
+    }
+
+/*    val joinedByJunctionTable = tableChildrenInfo.filter(_.isJunctionTable).map{ childTableInfo =>
       val foreignKeyToSecondSide = childTableInfo.foreignKeys.filter(_.referencedTable != table.name).head
       val tableSecondSide = foreignKeyInfo.tablesByName(foreignKeyToSecondSide.referencedTable)
       val tableSecondSideInfo = new TableInfo(tableSecondSide)
@@ -107,9 +137,9 @@ ${methods}
     val joinedByForeignKey = table.foreignKeys.map { fk =>
       val referencedTableInfo = new TableInfo(foreignKeyInfo.tablesByName(fk.referencedTable))
         findByForeignKeyMethodCode(referencedTableInfo)
-    }
+    }*/
 
-    joinedByJunctionTable ++ joinedByForeignKey
+    formOptions ++ findByMethods ++ uniqueFindByMethods ++ joinedByJunctionTableMethods//++ joinedByJunctionTable ++ joinedByForeignKey
   }
 
   override def writeToFile(folder:String, pkg: String, fileName: String= objectName +  ".scala") {

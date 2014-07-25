@@ -100,11 +100,11 @@ def delete(${methodArgs}) = {
   def deleteJunctionMethodCode(foreignKeys : Seq[ForeignKey]) = {
 
     val idColumns = foreignKeys.map{ fk =>
-      makeArgsWithoutTypes(fk.referencingColumns)
+      makeArgsWithTypes(fk.referencingColumns)
     }.mkString(", ")
 
     val findingColumns = foreignKeys.map{ fk =>
-      makeRowComparing(fk.referencingColumns)
+      makeSlickRowComparing(fk.referencingColumns)
     }.mkString(" && ")
 
     s"""
@@ -134,7 +134,7 @@ def update(updatedRow: ${tableRowName}) = {
 
     val args = makeArgsWithColumnTypes(columns)
 
-    val rowComparingArgs = makeRowComparing(columns)
+    val rowComparingArgs = makeSlickRowComparing(columns)
 
     val methodName = makeFindByQueryMethodName(columns)
 
@@ -244,10 +244,14 @@ def ${findByMethodName}(${findByMethodArgs}) : List[${tableRowName}] = {
 
   def formOptionsMethodCode(colName : String) = {
 
+    val id = standardColumnName(colName)
+
+    val byName = id.capitalize
+
     s"""
-def formOptionsBy${colName.toCamelCase} : Seq[(String, String)] = {
+def formOptionsBy${byName} : Seq[(String, String)] = {
   ${queryObjectName}.list.map{ row =>
-    (row.${colName}.toString, ${fieldsForSimpleName.map("row." + _).mkString(" + \" \" + ")})
+    (row.${id}.toString, ${fieldsForSimpleName.map("row." + _).mkString(" + \" \" + ")})
   }
 }""".trim()
   }
