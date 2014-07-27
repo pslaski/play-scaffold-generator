@@ -1,7 +1,5 @@
 package generators.utils
 
-import scala.slick.jdbc.meta.createModel
-
 class ModelProvider(config : AppConfig) {
 
   private val jdbcDriver = config.jdbcDriver
@@ -15,8 +13,8 @@ class ModelProvider(config : AppConfig) {
 
   lazy val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
   lazy val model = db.withSession { implicit session =>
-    val tables = slickDriver.getTables.list.filterNot(t => excluded.exists(_.equalsIgnoreCase(t.name.name)))
-    createModel( tables, slickDriver )
+    val tables = slickDriver.defaultTables.filterNot(t => excluded.exists(_.equalsIgnoreCase(t.name.name)))
+    slickDriver.createModel(Some(tables))
   }
 
 }
