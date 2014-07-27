@@ -22,6 +22,8 @@ class TableInfo(val table : Table) extends GeneratorHelpers{
 
   val queryObjectName : String = nameCamelCased
 
+  val parserName : String = nameCamelCased + "Parser"
+
   val primaryKeyOpt = columns.find(_.options.contains(scala.slick.ast.ColumnOption.PrimaryKey))
 
   val primaryKeyColumns : Seq[Column]= {

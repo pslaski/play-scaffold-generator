@@ -1,4 +1,4 @@
-package generators.models.slick
+package generators.models.anorm
 
 import generators.utils.OutputHelpers
 
@@ -6,15 +6,15 @@ object DbConnectionGenerator extends OutputHelpers {
 
   def code : String = {
     s"""
-import models.Tables
-import Tables.profile.simple._
+import java.sql.Connection
+
 import play.api.db.DB
 import play.api.Play.current
 
-//auto-generated object providing implicit db session
+//auto-generated object providing implicit db connection
 object DbConnection {
 
-  implicit lazy val session : Session = Database.forDataSource(DB.getDataSource()).createSession()
+  implicit lazy val connection : Connection = DB.getConnection()
 
 }
     """.trim()

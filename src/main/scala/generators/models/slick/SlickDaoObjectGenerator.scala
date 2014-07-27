@@ -61,7 +61,7 @@ ${methods}
   }
 
   def imports : String = {
-    Seq(importCode("utils.DbConnection._"),
+    Seq(importCode("utils.DbSession._"),
         importCode("Tables._"),
         importCode("Tables.profile.simple._"))
         .mkString("\n")
