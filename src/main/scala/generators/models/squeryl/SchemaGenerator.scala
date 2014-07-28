@@ -71,7 +71,8 @@ object ${objectName} extends Schema {
   def printSimpleJunctionClass(tableInfo : TableInfo) = {
 
     s"""
-  case class ${tableInfo.tableRowName}(${printClassColumns(tableInfo)}) {
+  case class ${tableInfo.tableRowName}(
+    ${printClassColumns(tableInfo)}) {
 
     ${printConstructor(tableInfo)}
   }
@@ -83,7 +84,8 @@ object ${objectName} extends Schema {
     val keyedEntityType = makeCompositeKeyType(tableInfo.primaryKeyColumns)
 
     s"""
-  case class ${tableInfo.tableRowName}(${printClassColumns(tableInfo)}) extends KeyedEntity[${keyedEntityType}] {
+  case class ${tableInfo.tableRowName}(
+    ${printClassColumns(tableInfo)}) extends KeyedEntity[${keyedEntityType}] {
 
     ${printId(tableInfo)}
 
@@ -98,7 +100,7 @@ object ${objectName} extends Schema {
     tableInfo.columns.map{ col =>
       if(!tableInfo.isSimpleJunctionTable && primaryKeyColumns.length == 1 && col.name.equals(primaryKeyColumns.head.name)) printIdColumn(col)
       else printColumn(col)
-    }.mkString(", \n\t\t\t")
+    }.mkString(", \n\t\t")
   }
 
   def printConstructor(tableInfo : TableInfo) : String = {
@@ -138,7 +140,8 @@ object ${objectName} extends Schema {
     val keyedEntityType = makeCompositeKeyType(tableInfo.primaryKeyColumns)
 
     s"""
-  case class ${tableInfo.tableRowName}(${printClassColumns(tableInfo)}) extends KeyedEntity[${keyedEntityType}] {
+  case class ${tableInfo.tableRowName}(
+    ${printClassColumns(tableInfo)}) extends KeyedEntity[${keyedEntityType}] {
 
     ${printId(tableInfo)}
 

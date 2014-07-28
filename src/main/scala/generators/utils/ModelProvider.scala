@@ -9,7 +9,6 @@ class ModelProvider(config : AppConfig) {
   private val excluded = Seq("play_evolutions")
 
   val slickDriver = config.slickDriver
-  val slickDriverPath = config.slickDriverPath
 
   lazy val db = slickDriver.simple.Database.forURL(url,driver=jdbcDriver, user = user, password = password)
   lazy val model = db.withSession { implicit session =>
