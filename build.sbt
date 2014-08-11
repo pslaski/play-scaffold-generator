@@ -6,9 +6,9 @@ scalaVersion := "2.10.4"
 
 sbtPlugin := true
 
-libraryDependencies += "com.typesafe.slick" %% "slick" % "2.1.0-RC3"
+libraryDependencies += "com.typesafe.slick" %% "slick" % "2.1.0"
 
-libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % "2.1.0-RC3"
+libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % "2.1.0"
 
 libraryDependencies += "com.typesafe" % "config" % "1.2.1"
 
