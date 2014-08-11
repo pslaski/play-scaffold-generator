@@ -84,4 +84,23 @@ trait GeneratorHelpers extends StringUtils {
     }
   }
 
+  def makeArrowAssoc(columns : Seq[Column]) : String = columns.map { column =>
+    s"""'${standardColumnName(column.name)} -> ${standardColumnName(column.name)}"""
+  }.mkString(",\n\t\t\t\t")
+
+  def makeArrowAssocWithObjectName(objectName : String, columns : Seq[Column]) : String = columns.map { column =>
+    s"""'${standardColumnName(column.name)} -> ${objectName}.${standardColumnName(column.name)}"""
+  }.mkString(",\n\t\t\t\t")
+
+  def makeSQLColumnAssigning(column : Column) : String = {
+    s"""\"${column.name}\" = {${standardColumnName(column.name)}}"""
+  }
+
+  def makeColumnNamesList(columns : Seq[Column]) : String = columns.map { column =>
+    "\"" + column.name + "\""
+  }.mkString(", ")
+
+  def makeValuesList(columns : Seq[Column]) : String = columns.map { column =>
+    "{" + standardColumnName(column.name) + "}"
+  }.mkString(", ")
 }

@@ -1,4 +1,4 @@
-import generators.models.anorm.{DbConnectionGenerator, ClassesAndParsersGenerator}
+import generators.models.anorm._
 import generators.models.slick.{DbSessionGenerator, TablesGenerator, SlickDaoObjectGenerator}
 import generators.models.squeryl.{GlobalObjectGenerator, SquerylDaoObjectGenerator, SchemaGenerator}
 import generators.views.ViewGenerator
@@ -119,9 +119,13 @@ object ScaffoldPlugin extends Plugin {
 
     stream.log.info("Start scaffold....")
 
-    //GlobalObjectGenerator.writeToFile(outputDir, "")
+    CustomColumnsGenerator.writeToFile(outputDir, appConfig.utilsPackage)
 
-    //stream.log.info("Generating Global Object completed....")
+    stream.log.info("Generating CustomColumns Object completed....")
+
+    CustomToStatementGenerator.writeToFile(outputDir, appConfig.utilsPackage)
+
+    stream.log.info("Generating CustomToStatement Object completed....")
 
     ClassesAndParsersGenerator.generate(outputDir)
 
@@ -131,9 +135,9 @@ object ScaffoldPlugin extends Plugin {
 
     stream.log.info("Generating DB connection helper completed....")
 
-    //SquerylDaoObjectGenerator.generate(outputDir)
+    AnormDaoObjectGenerator.generate(outputDir)
 
-    //stream.log.info("Generating Dao objects completed....")
+    stream.log.info("Generating Dao objects completed....")
 
     CustomFormattersGenerator.writeToFile(outputDir, appConfig.utilsPackage)
 

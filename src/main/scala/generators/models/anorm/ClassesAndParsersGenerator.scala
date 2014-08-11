@@ -43,7 +43,8 @@ object ${objectName} {
 
   def imports : String = {
     Seq(importCode("anorm._"),
-        importCode("anorm.SqlParser._"))
+        importCode("anorm.SqlParser._"),
+        importCode("utils.CustomColumns._"))
         .mkString("\n\t")
   }
 
