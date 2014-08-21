@@ -167,12 +167,14 @@ def ${methodName}(${args}) : Option[${tableRowName}] = {
 
     val methodName = makeDeleteByMethodName(columns)
 
-    val whereCondition = makeSquerylRowComparing(columns)
+    val findByQuery = makeFindByQueryMethodName(columns)
+
+    val findByQueryArgs = makeArgsWithoutTypes(columns)
 
   s"""
 def ${methodName}(${args}) = {
   inTransaction{
-    ${queryObjectName}.deleteWhere(row => ${whereCondition})
+    ${queryObjectName}.delete(${findByQuery}(${findByQueryArgs}))
   }
 }
 """.trim()
