@@ -16,7 +16,7 @@ object CustomColumns {
     value match {
       case date: java.sql.Date => Right(date)
       case time: Long => Right(new java.sql.Date(time))
-      case _ => Left(TypeDoesNotMatch(s"Cannot convert $$value: $${value.asInstanceOf[AnyRef].getClass} to Date for column $$qualified"))
+      case _ => Left(TypeDoesNotMatch(s"Cannot convert $$value: $${value.asInstanceOf[AnyRef].getClass} to java.sql.Date for column $$qualified"))
     }
   }
 
@@ -25,7 +25,7 @@ object CustomColumns {
     value match {
       case timestamp: java.sql.Timestamp => Right(timestamp)
       case time: Long => Right(new java.sql.Timestamp(time))
-      case _ => Left(TypeDoesNotMatch(s"Cannot convert $$value: $${value.asInstanceOf[AnyRef].getClass} to Date for column $$qualified"))
+      case _ => Left(TypeDoesNotMatch(s"Cannot convert $$value: $${value.asInstanceOf[AnyRef].getClass} to java.sql.Timestamp for column $$qualified"))
     }
   }
 
@@ -34,7 +34,7 @@ object CustomColumns {
     value match {
       case time: java.sql.Time => Right(time)
       case time: Long => Right(new java.sql.Time(time))
-      case _ => Left(TypeDoesNotMatch(s"Cannot convert $$value: $${value.asInstanceOf[AnyRef].getClass} to Date for column $$qualified"))
+      case _ => Left(TypeDoesNotMatch(s"Cannot convert $$value: $${value.asInstanceOf[AnyRef].getClass} to java.sql.Time for column $$qualified"))
     }
   }
 
