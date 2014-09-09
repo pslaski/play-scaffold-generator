@@ -35,9 +35,11 @@ class EditFormViewGenerator(table : Table) extends ViewHelpers with FormViewGene
 
   override val arguments = Seq((formName, "Form[Tables." + tableRowName + "]")) ++ selectFormOptionsArgs
 
+  val implicitFieldConstructor = "@implicitFieldConstructor = @{ FieldConstructor(twitterBootstrapInput.f) }"
+
   override def imports: String = {
     Seq(importCodeView("helper._"),
-        importCodeView("helper.twitterBootstrap._")).mkString("\n")
+        implicitFieldConstructor).mkString("\n")
   }
 
   override def bodyCode: String = {

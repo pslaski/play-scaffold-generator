@@ -37,9 +37,11 @@ class CreateFormViewGenerator(table : Table) extends ViewHelpers with FormViewGe
 
   override val autoIncDefaultValue = "0"
 
+  val implicitFieldConstructor = "@implicitFieldConstructor = @{ FieldConstructor(twitterBootstrapInput.f) }"
+
   override def imports: String = {
     Seq(importCodeView("helper._"),
-        importCodeView("helper.twitterBootstrap._")).mkString("\n")
+        implicitFieldConstructor).mkString("\n")
   }
 
   override def bodyCode: String = {

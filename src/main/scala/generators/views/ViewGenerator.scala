@@ -17,6 +17,7 @@ object ViewGenerator {
 
     new MainLayoutViewGenerator(model).writeToFile(outputFolder, pkg)
     IndexViewGenerator.writeToFile(outputFolder, pkg)
+    TwitterBootstrapInputGenerator.writeToFile(outputFolder, pkg)
 
     MainCssGenerator.writeToFile("public", "stylesheets")
 
