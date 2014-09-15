@@ -1,3 +1,5 @@
+organization := "com.github.pslaski"
+
 name := "play-scaffold-generator"
 
 version := "1.0.0"
