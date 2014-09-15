@@ -43,6 +43,4 @@ class AppConfig(config : Config, appName : String) extends ConfigUtils{
   lazy val slickDriver = DriverLoader.slickDriver(jdbcDriver)
   lazy val slickDriverPath = DriverLoader.slickDriverPath(jdbcDriver)
 
-  lazy val isInsertReturnOtherEnabled = slickDriver.capabilities.contains(capabilities.returnInsertOther)
-
 }
