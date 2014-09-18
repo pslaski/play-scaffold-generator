@@ -8,7 +8,7 @@ Installation
 
 Add the following line to **/project/plugins.sbt** file:
 
-    addSbtPlugin("com.github.pslaski" % "play-scaffold-generator" % "1.0.0")
+    addSbtPlugin("com.github.pslaski" % "play-scaffold-generator" % "0.1.0")
 
 Configuration
 -----
