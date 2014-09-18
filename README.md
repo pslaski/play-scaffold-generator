@@ -68,7 +68,7 @@ Usage
 
 After installation and configuration start or reload Activator project console.
 
-Run **scaffoldAnorm**, **scaffoldSqueryl** or **ScaffoldSlick** command to generate all files.
+Run `scaffoldAnorm`, `scaffoldSqueryl` or `ScaffoldSlick` command to generate all files.
 
 ### License
 
